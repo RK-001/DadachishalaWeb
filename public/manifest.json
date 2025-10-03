@@ -1,0 +1,33 @@
+{
+  "short_name": "Dada Chi Shala",
+  "name": "Educare Education Trust",
+  "description": "Free quality education for street and underprivileged children in Pune",
+  "icons": [
+    {
+      "src": "logos/logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "logos/logo.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logos/logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e3a8a",
+  "background_color": "#ffffff",
+  "lang": "en",
+  "scope": "/",
+  "categories": ["education", "social", "nonprofit"]
+}
