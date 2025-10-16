@@ -9,6 +9,7 @@ import BranchManagement from '../components/BranchManagement';
 import TeamManagement from '../components/TeamManagement';
 import StoriesTestimonialsManagement from '../components/StoriesTestimonialsManagement';
 import BlogManagement from '../components/BlogManagement';
+import DonationManagement from '../components/DonationManagement';
 import { getEvents, getGalleryItems, getVolunteers } from '../services/databaseService';
 
 const AdminDashboard = () => {
@@ -48,12 +49,7 @@ const AdminDashboard = () => {
       case 'branches':
         return <BranchManagement />;
       case 'donations':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800">Donation Management</h2>
-            <p className="text-gray-600">Donation management features will be implemented here.</p>
-          </div>
-        );
+        return <DonationManagement />;
       case 'events':
         return (
           <div className="space-y-6">

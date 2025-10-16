@@ -149,20 +149,7 @@ If EmailJS is not configured, the application will:
 - Skip email sending
 - Log a warning in the console
 - Still save donations to the database
-
-## 📞 Support
-
-- EmailJS Documentation: [https://www.emailjs.com/docs/](https://www.emailjs.com/docs/)
-- EmailJS Support: [https://www.emailjs.com/support/](https://www.emailjs.com/support/)
-
-## 🎯 Final Notes
-
-- Emails are **optional** - donations will work even without EmailJS setup
-- For production, consider setting up a professional email address (e.g., noreply@dadachishala.org)
-- Test thoroughly before going live
-- Monitor your email quota to avoid service interruption
-
----
+--
 
 *Last updated: October 2025*
 
@@ -278,27 +265,6 @@ this.emailjsConfig = {
 };
 ```
 
-## Troubleshooting
-
-### Common Issues:
-
-1. **Emails not sending**
-   - Check EmailJS configuration
-   - Verify email service is connected
-   - Check browser console for errors
-
-2. **Template not found**
-   - Verify template ID is correct
-   - Ensure template variables match
-
-3. **Rate limiting**
-   - EmailJS has daily limits on free plans
-   - Consider upgrading for higher volume
-
-4. **Spam folder**
-   - Emails might go to spam initially
-   - Set up proper SPF/DKIM records for better deliverability
-
 ## Monitoring
 
 To monitor email sending:
@@ -316,9 +282,3 @@ To monitor email sending:
 5. Set up email analytics and tracking
 6. Implement bounce and complaint handling
 
-## Support
-
-For additional help:
-- EmailJS Documentation: [https://www.emailjs.com/docs/](https://www.emailjs.com/docs/)
-- SendGrid Documentation: [https://docs.sendgrid.com/](https://docs.sendgrid.com/)
-- Contact development team for custom implementations

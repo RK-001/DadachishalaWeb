@@ -475,16 +475,62 @@ Address: ${contact.address}`;
 
   // Convenience method for donation receipt emails
   async sendDonationReceipt(donorData) {
-    const { email, firstName, lastName, amount, category, transactionId } = donorData;
+    const { email, firstName, lastName, amount, category, receiptNumber } = donorData;
     
-    const donationData = {
-      donorName: `${firstName} ${lastName}`,
-      amount: parseFloat(amount),
-      category: category,
-      transactionId: transactionId
-    };
+    try {
+      // Create the email template for receipt notification
+      const emailTemplate = {
+        recipientName: `${firstName} ${lastName}`,
+        subject: `Donation Approved - Receipt ${receiptNumber} - Dada Chi Shala`,
+        message: `Dear ${firstName} ${lastName},
 
-    return await this.sendDonationEmail(email, 'receipt', donationData);
+🎉 Congratulations! Your donation has been APPROVED and processed!
+
+Thank you for your generous contribution of ₹${amount?.toLocaleString()} for ${category}. Your donation is making a real difference in the lives of underprivileged children.
+
+📋 RECEIPT DETAILS:
+Receipt Number: ${receiptNumber}
+Amount: ₹${amount?.toLocaleString()}
+Category: ${category}
+Date: ${new Date().toLocaleDateString('en-IN')}
+Status: Approved ✅
+
+� OFFICIAL RECEIPT:
+Your official tax-deductible receipt will be sent to you separately as a PDF document. Please keep it for your tax records.
+
+TAX BENEFITS:
+Your donation is eligible for tax deduction under Section 80G of the Income Tax Act, 1961.
+Organization PAN: AABTE7634K
+Registration No: E-9107/Pune
+DARPAN ID: MH/0319809/2022
+
+WHAT YOUR DONATION SUPPORTS:
+• Quality education for street children
+• Nutritious meals and healthcare
+• Books, uniforms, and learning materials
+• Skill development programs
+• Safe learning environments
+
+Thank you for being a champion for children's education and empowerment!
+
+If you don't receive your PDF receipt within 24 hours, please contact us at dadachishala07@gmail.com
+
+With gratitude,
+Dada Chi Shala Team
+
+📧 dadachishala07@gmail.com
+📞 7038953001 / 7020396723
+🌐 www.dadachishala.org
+📍 Lane no 07, Near Suratwala Society, Kondhwa Khurd Shivneri Nagar Pune 411048`
+      };
+
+      // Send email notification (PDF will be sent separately by admin)
+      return await this.sendWithEmailJS(email, emailTemplate);
+      
+    } catch (error) {
+      console.error('Error sending donation receipt notification:', error);
+      return { success: false, error: error.message };
+    }
   }
 
   // Convenience method for verification pending emails
