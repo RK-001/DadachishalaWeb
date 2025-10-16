@@ -17,19 +17,27 @@ import {
   Medal,
   Heart,
   Eye,
-  Loader
+  Loader,
+  BookOpen,
+  PenTool
 } from 'lucide-react';
 import { 
   getGalleryItems,
   getAwards,
   getNewsArticles,
-  getVideos
+  getVideos,
+  getBlogs
 } from '../services/databaseService';
+import BlogCard from '../components/BlogCard';
+import BlogModal from '../components/BlogModal';
 
 const GalleryPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [selectedBlog, setSelectedBlog] = useState(null);
+  const [blogModalOpen, setBlogModalOpen] = useState(false);
+  const [selectedBlogFilter, setSelectedBlogFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -38,6 +46,7 @@ const GalleryPage = () => {
   const [photos, setPhotos] = useState([]);
   const [videos, setVideos] = useState([]);
   const [newsItems, setNewsItems] = useState([]);
+  const [blogs, setBlogs] = useState([]);
 
   // Load data from Firebase on component mount
   useEffect(() => {
@@ -47,11 +56,12 @@ const GalleryPage = () => {
         setError(null);
 
         // Fetch all data in parallel
-        const [awardsData, photosData, videosData, newsData] = await Promise.all([
+        const [awardsData, photosData, videosData, newsData, blogsData] = await Promise.all([
           getAwards(),
           getGalleryItems(),
           getVideos(),
-          getNewsArticles()
+          getNewsArticles(),
+          getBlogs()
         ]);
 
         // Process awards data to add icons
@@ -64,6 +74,7 @@ const GalleryPage = () => {
         setPhotos(photosData);
         setVideos(videosData);
         setNewsItems(newsData);
+        setBlogs(blogsData);
       } catch (err) {
         console.error('Error loading gallery data:', err);
         setError('Failed to load gallery content. Please try again later.');
@@ -116,6 +127,21 @@ const GalleryPage = () => {
   const closeVideoModal = () => {
     setSelectedVideo(null);
   };
+
+  const openBlogModal = (blog) => {
+    setSelectedBlog(blog);
+    setBlogModalOpen(true);
+  };
+
+  const closeBlogModal = () => {
+    setSelectedBlog(null);
+    setBlogModalOpen(false);
+  };
+
+  // Filter blogs based on author type
+  const filteredBlogs = selectedBlogFilter === 'all' 
+    ? blogs 
+    : blogs.filter(blog => blog.author_type === selectedBlogFilter);
 
   // Show loading state
   if (loading) {
@@ -416,6 +442,81 @@ const GalleryPage = () => {
         </div>
       </section>
 
+      {/* Blog Section */}
+      <section className="section-padding bg-gray-50">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <PenTool className="w-12 h-12 mx-auto mb-4 text-primary-600" />
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-4">
+              Stories & Blogs
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Inspiring stories and experiences shared by our volunteers and students
+            </p>
+          </div>
+
+          {/* Blog Filter */}
+          <div className="flex justify-center gap-3 mb-8">
+            <button
+              onClick={() => setSelectedBlogFilter('all')}
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                selectedBlogFilter === 'all'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              All Stories ({blogs.length})
+            </button>
+            <button
+              onClick={() => setSelectedBlogFilter('volunteer')}
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                selectedBlogFilter === 'volunteer'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              Volunteer Stories ({blogs.filter(b => b.author_type === 'volunteer').length})
+            </button>
+            <button
+              onClick={() => setSelectedBlogFilter('student')}
+              className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                selectedBlogFilter === 'student'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+              }`}
+            >
+              Student Stories ({blogs.filter(b => b.author_type === 'student').length})
+            </button>
+          </div>
+
+          {/* Blog Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredBlogs.length > 0 ? (
+              filteredBlogs.map((blog) => (
+                <BlogCard 
+                  key={blog.id} 
+                  blog={blog} 
+                  onClick={openBlogModal}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {selectedBlogFilter === 'all' ? 'No Blogs Yet' : `No ${selectedBlogFilter} Stories Yet`}
+                </h3>
+                <p className="text-gray-600">
+                  {selectedBlogFilter === 'all' 
+                    ? 'Blog posts and stories will appear here once added.' 
+                    : `${selectedBlogFilter === 'volunteer' ? 'Volunteer' : 'Student'} stories will appear here once added.`
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Image Modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
@@ -465,6 +566,13 @@ const GalleryPage = () => {
           </div>
         </div>
       )}
+
+      {/* Blog Modal */}
+      <BlogModal 
+        blog={selectedBlog}
+        isOpen={blogModalOpen}
+        onClose={closeBlogModal}
+      />
     </div>
   );
 };

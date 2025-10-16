@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Users, Heart, Calendar, Image, BarChart3, MapPin, UserCheck, Star } from 'lucide-react';
+import { LogOut, Users, Heart, Calendar, Image, BarChart3, MapPin, UserCheck, Star, PenTool } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
 import EventManagement from '../components/EventManagement';
 import GalleryManagement from '../components/GalleryManagement';
@@ -8,6 +8,7 @@ import VolunteerManagement from '../components/VolunteerManagement';
 import BranchManagement from '../components/BranchManagement';
 import TeamManagement from '../components/TeamManagement';
 import StoriesTestimonialsManagement from '../components/StoriesTestimonialsManagement';
+import BlogManagement from '../components/BlogManagement';
 import { getEvents, getGalleryItems, getVolunteers } from '../services/databaseService';
 
 const AdminDashboard = () => {
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
   const tabs = [
     { id: 'team', label: 'Team', icon: UserCheck },
     { id: 'stories', label: 'Stories & Testimonials', icon: Star },
+    { id: 'blogs', label: 'Blogs', icon: PenTool },
     { id: 'volunteers', label: 'Volunteers', icon: Users },
     { id: 'branches', label: 'Branches', icon: MapPin },
     { id: 'donations', label: 'Donations', icon: Heart },
@@ -39,6 +41,8 @@ const AdminDashboard = () => {
         return <TeamManagement />;
       case 'stories':
         return <StoriesTestimonialsManagement />;
+      case 'blogs':
+        return <BlogManagement />;
       case 'volunteers':
         return <VolunteerManagement />;
       case 'branches':

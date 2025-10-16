@@ -176,6 +176,107 @@ export const deleteTestimonial = async (testimonialId) => {
   }
 };
 
+// ================================
+// BLOGS COLLECTION OPERATIONS
+// ================================
+
+/**
+ * Add a new blog post
+ */
+export const addBlog = async (blogData) => {
+  try {
+    const docRef = await addDoc(collection(db, 'blogs'), {
+      ...blogData,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all blogs with optional filtering
+ */
+export const getBlogs = async (authorType = null, limitCount = null) => {
+  try {
+    let q = query(collection(db, 'blogs'), orderBy('created_at', 'desc'));
+    
+    if (authorType) {
+      q = query(
+        collection(db, 'blogs'),
+        where('author_type', '==', authorType),
+        orderBy('created_at', 'desc')
+      );
+    }
+    
+    if (limitCount) {
+      q = query(q, limit(limitCount));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching blogs:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a single blog by ID
+ */
+export const getBlogById = async (blogId) => {
+  try {
+    const docRef = doc(db, 'blogs', blogId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data()
+      };
+    } else {
+      throw new Error('Blog not found');
+    }
+  } catch (error) {
+    console.error('Error fetching blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a blog post
+ */
+export const updateBlog = async (blogId, updateData) => {
+  try {
+    const blogRef = doc(db, 'blogs', blogId);
+    await updateDoc(blogRef, {
+      ...updateData,
+      updated_at: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a blog post
+ */
+export const deleteBlog = async (blogId) => {
+  try {
+    await deleteDoc(doc(db, 'blogs', blogId));
+  } catch (error) {
+    console.error('Error deleting blog:', error);
+    throw error;
+  }
+};
+
 /**
  * Get upcoming events only
  */
@@ -964,6 +1065,13 @@ export default {
   getTestimonials,
   updateTestimonial,
   deleteTestimonial,
+  
+  // Blogs
+  addBlog,
+  getBlogs,
+  getBlogById,
+  updateBlog,
+  deleteBlog,
   
   // Utilities
   getDocumentById,

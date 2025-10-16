@@ -46,6 +46,24 @@ class EmailService {
     }
   }
 
+  async sendDonationEmail(donorEmail, emailType, donationData, customMessage = '') {
+    try {
+      const emailTemplates = this.getDonationEmailTemplate(emailType, donationData, customMessage);
+      
+      // Try to send email using EmailJS
+      if (this.emailjsConfig.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+        return await this.sendWithEmailJS(donorEmail, emailTemplates);
+      } else {
+        // For demo purposes, use a working alternative or show setup instructions
+        return await this.sendDemoEmail(donorEmail, emailTemplates);
+      }
+    } catch (error) {
+      console.error('Error sending donation email:', error);
+      // Fallback to demo mode
+      return await this.sendDemoEmail(donorEmail, emailTemplates);
+    }
+  }
+
   getEmailTemplate(emailType, volunteerData, customMessage) {
     const { fullName, preferredBranches } = volunteerData;
     
@@ -142,6 +160,129 @@ We will get back to you soon.
 Best regards,
 Dada Chi Shala Team
 📧 info@dadachishala.org`
+        };
+    }
+  }
+
+  getDonationEmailTemplate(emailType, donationData, customMessage) {
+    const { donorName, amount, category, transactionId } = donationData;
+    
+    switch (emailType) {
+      case 'thank_you':
+        return {
+          recipientName: donorName,
+          subject: 'Thank You for Your Generous Donation - Dada Chi Shala',
+          message: `Dear ${donorName},
+
+🙏 Thank you for your generous donation of ₹${amount.toLocaleString()}${category ? ` for ${category}` : ''}!
+
+Your contribution makes a real difference in the lives of underprivileged children in Pune. Every rupee you donate helps us provide:
+
+📚 Quality Education - Books, supplies, and learning materials
+🏥 Healthcare Support - Regular medical check-ups and treatments
+🍽️ Nutritional Support - Healthy meals for growing minds
+🎯 Skill Development - Programs to build practical life skills
+
+DONATION DETAILS:
+💰 Amount: ₹${amount.toLocaleString()}
+📋 Category: ${category || 'General Donation'}
+${transactionId ? `🧾 Transaction ID: ${transactionId}` : ''}
+📅 Date: ${new Date().toLocaleDateString('en-IN')}
+
+WHAT HAPPENS NEXT:
+1. Your payment is being verified by our admin team
+2. You will receive an official receipt within 2-3 business days
+3. We will send you updates on how your donation is being used
+
+TAX BENEFITS:
+Your donation is eligible for tax deduction under Section 80G of the Income Tax Act.
+Our PAN: AABTE7634K
+
+STAY CONNECTED:
+Follow our impact stories and updates:
+📧 Email: dadachishala100@gmail.com
+🌐 Website: https://dadachishala.web.app
+📱 Phone: +91 8524001000 / +91 7066040923
+
+Your kindness gives these children hope for a brighter future. Together, we are transforming lives, one child at a time.
+
+With heartfelt gratitude,
+Dada Chi Shala Team
+Educare (Dada Chi Shala) Educational Trust`
+        };
+
+      case 'receipt':
+        return {
+          recipientName: donorName,
+          subject: 'Official Donation Receipt - Dada Chi Shala',
+          message: `Dear ${donorName},
+
+Thank you for your donation. Please find your official receipt details below:
+
+RECEIPT DETAILS:
+Receipt No: DCH${Date.now()}
+Date: ${new Date().toLocaleDateString('en-IN')}
+Donor Name: ${donorName}
+Amount: ₹${amount.toLocaleString()}
+Category: ${category || 'General Donation'}
+${transactionId ? `Transaction ID: ${transactionId}` : ''}
+
+This donation is eligible for tax deduction under Section 80G of the Income Tax Act.
+
+Organization Details:
+Name: Educare (Dada Chi Shala) Educational Trust
+Registration No: 91217, Pune
+PAN: AABTE7634K
+Address: Flat no 144 Bld 11, A2 to A2 Viraj Suchivela Society, Katraj-Pune, Pune Shankar Nagar Pune 411043
+
+Thank you for supporting our mission to provide quality education to underprivileged children.
+
+Best regards,
+Dada Chi Shala Team`
+        };
+
+      case 'verification_pending':
+        return {
+          recipientName: donorName,
+          subject: 'Donation Verification in Progress - Dada Chi Shala',
+          message: `Dear ${donorName},
+
+Thank you for your donation of ₹${amount.toLocaleString()} to Dada Chi Shala.
+
+VERIFICATION STATUS:
+Your payment is currently being verified by our admin team. This process typically takes 24-48 hours.
+
+WHAT WE'RE VERIFYING:
+✓ Payment confirmation
+✓ Amount verification
+✓ Bank transaction details
+
+NEXT STEPS:
+1. Our team will verify your payment screenshot
+2. Once verified, you'll receive an official receipt
+3. Your donation will be reflected in our records
+
+If you have any questions or if verification takes longer than expected, please contact us:
+📧 dadachishala100@gmail.com
+📱 +91 8524001000
+
+Thank you for your patience and generosity!
+
+Best regards,
+Dada Chi Shala Team`
+        };
+
+      default:
+        return {
+          recipientName: donorName,
+          subject: 'Message from Dada Chi Shala',
+          message: customMessage || `Dear ${donorName},
+
+Thank you for your support to Dada Chi Shala.
+
+Best regards,
+Dada Chi Shala Team
+📧 dadachishala100@gmail.com`
         };
     }
   }
@@ -316,6 +457,47 @@ Address: ${contact.address}`;
       console.error('Email configuration test failed:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  // Convenience method for donation thank you emails
+  async sendDonationThankYou(donorData) {
+    const { email, firstName, lastName, amount, category, transactionId } = donorData;
+    
+    const donationData = {
+      donorName: `${firstName} ${lastName}`,
+      amount: parseFloat(amount),
+      category: category,
+      transactionId: transactionId
+    };
+
+    return await this.sendDonationEmail(email, 'thank_you', donationData);
+  }
+
+  // Convenience method for donation receipt emails
+  async sendDonationReceipt(donorData) {
+    const { email, firstName, lastName, amount, category, transactionId } = donorData;
+    
+    const donationData = {
+      donorName: `${firstName} ${lastName}`,
+      amount: parseFloat(amount),
+      category: category,
+      transactionId: transactionId
+    };
+
+    return await this.sendDonationEmail(email, 'receipt', donationData);
+  }
+
+  // Convenience method for verification pending emails
+  async sendDonationVerificationPending(donorData) {
+    const { email, firstName, lastName, amount, category } = donorData;
+    
+    const donationData = {
+      donorName: `${firstName} ${lastName}`,
+      amount: parseFloat(amount),
+      category: category
+    };
+
+    return await this.sendDonationEmail(email, 'verification_pending', donationData);
   }
 }
 

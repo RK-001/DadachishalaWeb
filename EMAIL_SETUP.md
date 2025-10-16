@@ -1,53 +1,170 @@
-# Email Service Setup Guide
+# EmailJS Setup Guide for Dada Chi Shala
 
-This guide explains how to set up email functionality for the Dada Chi Shala volunteer management system.
+This guide will help you set up EmailJS to send automatic email notifications for donations and volunteer applications.
 
-## Overview
+## 📧 Why EmailJS?
 
-The email service is designed to send automated emails to volunteers for various actions:
-- Welcome emails for approved volunteers
-- Information request emails
-- Rejection notifications
-- Orientation schedules
+EmailJS allows sending emails directly from your frontend application without needing a backend server. It's perfect for:
+- Donation thank you emails
+- Volunteer welcome emails
+- Contact form notifications
 
-## Email Service Options
+## 🚀 Setup Instructions
 
-### Option 1: EmailJS (Recommended for Quick Setup)
+### Step 1: Create EmailJS Account
 
-EmailJS allows sending emails directly from the frontend without a backend server.
+1. Go to [https://www.emailjs.com/](https://www.emailjs.com/)
+2. Sign up for a free account
+3. Verify your email address
 
-#### Setup Steps:
+### Step 2: Create Email Service
 
-1. **Create EmailJS Account**
-   - Go to [EmailJS.com](https://www.emailjs.com/)
-   - Create a free account
+1. In your EmailJS dashboard, go to **Email Services**
+2. Click **Add New Service**
+3. Choose your email provider (Gmail, Outlook, etc.)
+4. Follow the setup instructions to connect your email account
+5. Note down the **Service ID** (e.g., `service_abc123`)
 
-2. **Create Email Service**
-   - Add a new service (Gmail, Outlook, etc.)
-   - Follow the setup wizard to connect your email account
+### Step 3: Create Email Templates
 
-3. **Create Email Template**
-   - Create a new template with the following variables:
-     - `{{to_email}}` - Recipient email
-     - `{{subject}}` - Email subject
-     - `{{message}}` - Email content
-     - `{{from_name}}` - Sender name
+#### For Donation Thank You Emails:
 
-4. **Get Configuration Details**
-   - Service ID
-   - Template ID  
-   - Public Key
+1. Go to **Email Templates** in your dashboard
+2. Click **Create New Template**
+3. Use this template structure:
 
-5. **Update Configuration**
-   - Open `src/services/emailService.js`
-   - Update the `emailjsConfig` object with your credentials:
-   ```javascript
-   this.emailjsConfig = {
-     serviceId: 'your_service_id',
-     templateId: 'your_template_id', 
-     publicKey: 'your_public_key'
-   };
-   ```
+```html
+Subject: Thank You for Your Donation - Dada Chi Shala
+
+Dear {{to_name}},
+
+{{message}}
+
+Amount: ₹{{amount}}
+Category: {{category}}
+
+Your support makes a real difference in the lives of underprivileged children.
+
+Best regards,
+{{from_name}}
+```
+
+4. Save the template and note the **Template ID** (e.g., `template_xyz789`)
+
+#### For Volunteer Welcome Emails:
+
+1. Create another template with this structure:
+
+```html
+Subject: Welcome to Dada Chi Shala - Volunteer Application Approved
+
+Dear {{to_name}},
+
+{{message}}
+
+We're excited to have you join our mission!
+
+Best regards,
+{{from_name}}
+```
+
+### Step 4: Get Your User ID
+
+1. Go to **Account** in your EmailJS dashboard
+2. Find your **User ID** (also called Public Key)
+3. Note it down (e.g., `user_abcdefg123456`)
+
+### Step 5: Configure Environment Variables
+
+1. Create a `.env` file in your project root (copy from `.env.example`)
+2. Add your EmailJS credentials:
+
+```bash
+# EmailJS Configuration
+VITE_EMAILJS_USER_ID=your_actual_user_id
+VITE_EMAILJS_SERVICE_ID=your_actual_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_actual_template_id
+```
+
+**Replace the placeholder values with your actual IDs from EmailJS.**
+
+### Step 6: Test Email Functionality
+
+1. Restart your development server: `npm run dev`
+2. Go to the donation page
+3. Make a test donation with your email address
+4. Check if you receive the thank you email
+
+## 🔧 Template Variables
+
+The following variables are available in your email templates:
+
+### Donation Emails:
+- `{{to_name}}` - Donor's full name
+- `{{to_email}}` - Donor's email address
+- `{{from_name}}` - "Dada Chi Shala"
+- `{{amount}}` - Donation amount
+- `{{category}}` - Donation category (School Kit, Medical Check-up, etc.)
+- `{{message}}` - Pre-written thank you message
+
+### Volunteer Emails:
+- `{{to_name}}` - Volunteer's name
+- `{{to_email}}` - Volunteer's email address
+- `{{from_name}}` - "Dada Chi Shala"
+- `{{message}}` - Welcome message with instructions
+
+## 💰 EmailJS Pricing
+
+- **Free Plan**: 200 emails/month (sufficient for most NGOs)
+- **Paid Plans**: Start at $15/month for more emails
+
+## 🛡️ Security Notes
+
+1. **User ID is public** - It's safe to include in your frontend code
+2. **Service ID and Template ID** - Also safe to be public
+3. **Email credentials** - Handled securely by EmailJS, never exposed
+
+## 🐛 Troubleshooting
+
+### Common Issues:
+
+1. **400 Bad Request Error**:
+   - Check if all IDs are correctly configured
+   - Ensure template variables match what you're sending
+   - Verify your email service is properly connected
+
+2. **Emails not being sent**:
+   - Check your EmailJS dashboard for error logs
+   - Verify your email service is active
+   - Check spam folder for test emails
+
+3. **Template not found**:
+   - Ensure template ID is correct
+   - Check if template is published/active
+
+### Testing Mode:
+
+If EmailJS is not configured, the application will:
+- Continue to work normally
+- Skip email sending
+- Log a warning in the console
+- Still save donations to the database
+
+## 📞 Support
+
+- EmailJS Documentation: [https://www.emailjs.com/docs/](https://www.emailjs.com/docs/)
+- EmailJS Support: [https://www.emailjs.com/support/](https://www.emailjs.com/support/)
+
+## 🎯 Final Notes
+
+- Emails are **optional** - donations will work even without EmailJS setup
+- For production, consider setting up a professional email address (e.g., noreply@dadachishala.org)
+- Test thoroughly before going live
+- Monitor your email quota to avoid service interruption
+
+---
+
+*Last updated: October 2025*
 
 6. **Install EmailJS**
    ```bash

@@ -177,7 +177,7 @@ const HomePage = () => {
   };
 
   const impactStats = [
-    { value: 1700, label: 'Students Taught', suffix: '+' },
+    { value: 1.7, label: 'Students Taught', suffix: 'K+' },
     { value: 10, label: 'Branches in Pune', suffix: '' },
     { value: 12, label: 'Slum Areas Covered', suffix: '' },
     { value: 257, label: 'Children Deaddicted', suffix: '' },
@@ -213,12 +213,22 @@ const HomePage = () => {
       {/* Modern Hero Section */}
       <section className="relative min-h-screen bg-primary-600 overflow-hidden">
         {sliderLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mb-6"></div>
-              <p className="text-xl font-medium">Loading experience...</p>
+          <>
+            {/* Backup Image Background during loading */}
+            <div className="absolute inset-0">
+              <img
+                src="/images/backupImage.jpg"
+                alt="Loading Background"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
             </div>
-          </div>
+            
+            {/* Primary-600 Overlay with 80% opacity */}
+            <div className="absolute inset-0 bg-primary-600/80"></div>
+          </>
         ) : sliderImages.length > 0 ? (
           <>
             {/* Dynamic Background Images */}
@@ -382,7 +392,9 @@ const HomePage = () => {
               Transforming Lives Every Day
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Since our inception in 2010, we have provided holistic support to underprivileged children and their families across Maharashtra
+            The growth of Organisation stands as a testament to the power 
+            of community-driven efforts and the profound impact that 
+            dedicated education can have on transforming lives.
             </p>
           </div>
           
@@ -393,8 +405,8 @@ const HomePage = () => {
                 className="group bg-white rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
               >
                 <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl mx-auto flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <div className="text-3xl font-bold text-white">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl mx-auto flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                    <div className="text-2xl font-bold text-white">
                       <AnimatedCounter 
                         end={stat.value} 
                         duration={2000} 
