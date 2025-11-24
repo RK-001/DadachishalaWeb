@@ -1,4 +1,5 @@
-const functions = require('firebase-functions');
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
+const {onObjectFinalized} = require("firebase-functions/v2/storage");
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
@@ -10,8 +11,8 @@ admin.initializeApp();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: functions.config().email?.user || process.env.EMAIL_USER,
-    pass: functions.config().email?.password || process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
   }
 });
 
@@ -100,9 +101,9 @@ function buildDonationEmail(donationData) {
 }
 
 // Cloud Function: Send Donation Receipt
-exports.sendDonationReceipt = functions.https.onCall(async (data, context) => {
+exports.sendDonationReceipt = onCall(async (request) => {
   try {
-    const { donationId, donationData } = data;
+    const { donationId, donationData } = request.data;
 
     // Generate PDF
     const pdfBuffer = await createReceiptPDF(donationData);
@@ -128,7 +129,7 @@ exports.sendDonationReceipt = functions.https.onCall(async (data, context) => {
 
     // Send email with PDF attachment
     const mailOptions = {
-      from: `Dada Chi Shala <${functions.config().email?.user || process.env.EMAIL_USER}>`,
+      from: `Dada Chi Shala <${process.env.EMAIL_USER}>`,
       to: donationData.email,
       subject: 'Thank You for Your Donation - Receipt Attached',
       html: buildDonationEmail(donationData),
@@ -157,14 +158,15 @@ exports.sendDonationReceipt = functions.https.onCall(async (data, context) => {
 
   } catch (error) {
     console.error('Error sending donation receipt:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
 
 // Cloud Function: Optimize Uploaded Images
-exports.optimizeImage = functions.storage.object().onFinalize(async (object) => {
-  const filePath = object.name;
-  const contentType = object.contentType;
+exports.optimizeImage = onObjectFinalized(async (event) => {
+  const fileBucket = event.data.bucket; // The Storage bucket that contains the file.
+  const filePath = event.data.name; // File path in the bucket.
+  const contentType = event.data.contentType; // File content type.
 
   // Only process images
   if (!contentType || !contentType.startsWith('image/')) {
@@ -176,7 +178,7 @@ exports.optimizeImage = functions.storage.object().onFinalize(async (object) => 
     return null;
   }
 
-  const bucket = admin.storage().bucket();
+  const bucket = admin.storage().bucket(fileBucket);
   const fileName = filePath.split('/').pop();
   const fileDir = filePath.substring(0, filePath.lastIndexOf('/'));
 
@@ -217,9 +219,9 @@ exports.optimizeImage = functions.storage.object().onFinalize(async (object) => 
 });
 
 // Cloud Function: Send Volunteer Confirmation Email
-exports.sendVolunteerConfirmation = functions.https.onCall(async (data, context) => {
+exports.sendVolunteerConfirmation = onCall(async (request) => {
   try {
-    const { volunteerData } = data;
+    const { volunteerData } = request.data;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -250,7 +252,7 @@ exports.sendVolunteerConfirmation = functions.https.onCall(async (data, context)
     `;
 
     const mailOptions = {
-      from: `Dada Chi Shala <${functions.config().email?.user || process.env.EMAIL_USER}>`,
+      from: `Dada Chi Shala <${process.env.EMAIL_USER}>`,
       to: volunteerData.email,
       subject: 'Thank You for Volunteering with Dada Chi Shala',
       html: emailHtml
@@ -265,6 +267,6 @@ exports.sendVolunteerConfirmation = functions.https.onCall(async (data, context)
 
   } catch (error) {
     console.error('Error sending volunteer confirmation:', error);
-    throw new functions.https.HttpsError('internal', error.message);
+    throw new HttpsError('internal', error.message);
   }
 });
