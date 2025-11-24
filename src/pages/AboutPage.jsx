@@ -306,8 +306,10 @@ const AboutPage = () => {
               Our Impact
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Since our inception in 2010, we have provided holistic support to underprivileged children and their families across Maharashtra
-            </p>
+                 The growth of Organisation stands as a testament to the power 
+            of community-driven efforts and the profound impact that 
+            dedicated education can have on transforming lives.
+                 </p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">

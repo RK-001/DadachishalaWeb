@@ -1,13 +1,35 @@
 import emailjs from 'emailjs-com';
 
-// Initialize EmailJS with your user ID
-const EMAILJS_USER_ID = 'your_emailjs_user_id';
-const EMAILJS_SERVICE_ID = 'your_service_id';
-const EMAILJS_TEMPLATE_ID = 'your_template_id';
+// EmailJS Configuration
+// To set up EmailJS:
+// 1. Go to https://www.emailjs.com/
+// 2. Create an account and service
+// 3. Create an email template
+// 4. Replace the values below with your actual IDs
 
-emailjs.init(EMAILJS_USER_ID);
+const EMAILJS_USER_ID = import.meta.env.VITE_EMAILJS_USER_ID || 'your_emailjs_user_id';
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'your_service_id';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'your_template_id';
+
+// Check if EmailJS is properly configured
+const isEmailJSConfigured = () => {
+  return EMAILJS_USER_ID !== 'your_emailjs_user_id' && 
+         EMAILJS_SERVICE_ID !== 'your_service_id' && 
+         EMAILJS_TEMPLATE_ID !== 'your_template_id';
+};
+
+// Initialize EmailJS only if configured
+if (isEmailJSConfigured()) {
+  emailjs.init(EMAILJS_USER_ID);
+}
 
 export const sendVolunteerWelcomeEmail = async (volunteerData) => {
+  // Return early if EmailJS is not configured
+  if (!isEmailJSConfigured()) {
+    console.warn('EmailJS not configured. Skipping email send.');
+    return { status: 'skipped', message: 'EmailJS not configured' };
+  }
+
   try {
     const templateParams = {
       to_name: volunteerData.name,
@@ -32,28 +54,38 @@ Dada Chi Shala Team`,
       templateParams
     );
 
+    console.log('Volunteer welcome email sent successfully:', response);
     return response;
   } catch (error) {
-    console.error('Error sending email:', error);
-    throw error;
+    console.error('Error sending volunteer welcome email:', error);
+    // Don't throw error - make email optional
+    return { status: 'error', error: error.message };
   }
 };
 
 export const sendDonationThankYouEmail = async (donorData) => {
+  // Return early if EmailJS is not configured
+  if (!isEmailJSConfigured()) {
+    console.warn('EmailJS not configured. Skipping donation thank you email.');
+    return { status: 'skipped', message: 'EmailJS not configured' };
+  }
+
   try {
     const templateParams = {
       to_name: donorData.name,
       to_email: donorData.email,
       from_name: 'Dada Chi Shala',
       amount: donorData.amount,
-      message: `Thank you for your generous donation of ₹${donorData.amount}!
+      category: donorData.category || 'General Donation',
+      message: `Thank you for your generous donation of ₹${donorData.amount}${donorData.category ? ` for ${donorData.category}` : ''}!
       
 Your support helps us provide quality education to street and underprivileged children in Pune. 
 Every contribution makes a significant impact on a child's future.
 
-Your donation receipt is attached/will be sent separately.
+Your donation has been received and will be verified by our team. 
+A receipt will be sent to you once the verification is complete.
 
-With gratitude,
+With heartfelt gratitude,
 Dada Chi Shala Team`,
     };
 
@@ -63,9 +95,11 @@ Dada Chi Shala Team`,
       templateParams
     );
 
+    console.log('Donation thank you email sent successfully:', response);
     return response;
   } catch (error) {
-    console.error('Error sending donation email:', error);
-    throw error;
+    console.error('Error sending donation thank you email:', error);
+    // Don't throw error - make email optional
+    return { status: 'error', error: error.message };
   }
 };

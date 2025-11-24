@@ -31,16 +31,16 @@ const Footer = () => {
             
             {/* Social Media */}
             <div className="flex space-x-3">
-              <a href="#" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
+              <a href="https://www.facebook.com/dadachishala/" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
                 <Facebook size={16} className="text-gray-400 hover:text-white" />
               </a>
               <a href="#" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
                 <Twitter size={16} className="text-gray-400 hover:text-white" />
               </a>
-              <a href="#" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
+              <a href="https://www.instagram.com/dadachishala/?hl=en" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
                 <Instagram size={16} className="text-gray-400 hover:text-white" />
               </a>
-              <a href="#" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
+              <a href="https://www.youtube.com/dadachishalastreetschool" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
                 <Youtube size={16} className="text-gray-400 hover:text-white" />
               </a>
             </div>
@@ -109,11 +109,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone size={16} className="text-primary-400" />
-                <span className="text-gray-300 text-sm">+91 98765 43210</span>
+                <span className="text-gray-300 text-sm">+91 7020396723</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail size={16} className="text-primary-400" />
-                <span className="text-gray-300 text-sm">info@dadachishala.org</span>
+                <span className="text-gray-300 text-sm">dadachishala07@gmail.com</span>
               </div>
             </div>
           </div>

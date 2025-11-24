@@ -116,7 +116,7 @@ const TeamPage = () => {
       ) : (
         <>
           {/* Hero Section */}
-          <section className="relative py-24 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-600">
+        <section className="relative py-24 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-600">
         <div className="absolute inset-0 bg-black/20"></div>
         
         {/* Animated background elements */}

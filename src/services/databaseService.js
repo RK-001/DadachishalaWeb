@@ -176,6 +176,107 @@ export const deleteTestimonial = async (testimonialId) => {
   }
 };
 
+// ================================
+// BLOGS COLLECTION OPERATIONS
+// ================================
+
+/**
+ * Add a new blog post
+ */
+export const addBlog = async (blogData) => {
+  try {
+    const docRef = await addDoc(collection(db, 'blogs'), {
+      ...blogData,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all blogs with optional filtering
+ */
+export const getBlogs = async (authorType = null, limitCount = null) => {
+  try {
+    let q = query(collection(db, 'blogs'), orderBy('created_at', 'desc'));
+    
+    if (authorType) {
+      q = query(
+        collection(db, 'blogs'),
+        where('author_type', '==', authorType),
+        orderBy('created_at', 'desc')
+      );
+    }
+    
+    if (limitCount) {
+      q = query(q, limit(limitCount));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching blogs:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a single blog by ID
+ */
+export const getBlogById = async (blogId) => {
+  try {
+    const docRef = doc(db, 'blogs', blogId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data()
+      };
+    } else {
+      throw new Error('Blog not found');
+    }
+  } catch (error) {
+    console.error('Error fetching blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a blog post
+ */
+export const updateBlog = async (blogId, updateData) => {
+  try {
+    const blogRef = doc(db, 'blogs', blogId);
+    await updateDoc(blogRef, {
+      ...updateData,
+      updated_at: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating blog:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a blog post
+ */
+export const deleteBlog = async (blogId) => {
+  try {
+    await deleteDoc(doc(db, 'blogs', blogId));
+  } catch (error) {
+    console.error('Error deleting blog:', error);
+    throw error;
+  }
+};
+
 /**
  * Get upcoming events only
  */
@@ -272,17 +373,45 @@ export const addDonation = async (donationData) => {
  */
 export const updateDonationStatus = async (donationId, status, paymentId = null) => {
   try {
-    const donationRef = doc(db, 'donations', donationId);
-    const updateData = {
-      status,
-      updated_at: serverTimestamp()
-    };
+    // Update both collections for compatibility
     
+    // Update donors collection (where form submissions go)
+    const donorRef = doc(db, 'donors', donationId);
+    const donorUpdateData = {
+      status,
+      updatedAt: new Date()
+    };
+
+    // Add approval/rejection timestamp
+    if (status === 'approved') {
+      donorUpdateData.approvedAt = new Date();
+    } else if (status === 'rejected') {
+      donorUpdateData.rejectedAt = new Date();
+    }
+
+    await updateDoc(donorRef, donorUpdateData);
+    
+    // Also update donations collection if it exists
     if (paymentId) {
-      updateData.payment_id = paymentId;
+      try {
+        const donationRef = doc(db, 'donations', donationId);
+        const donationUpdateData = {
+          status,
+          updated_at: serverTimestamp()
+        };
+        
+        if (paymentId) {
+          donationUpdateData.payment_id = paymentId;
+        }
+        
+        await updateDoc(donationRef, donationUpdateData);
+      } catch (error) {
+        // Ignore if donations collection doesn't exist
+        console.log('Donations collection update skipped:', error.message);
+      }
     }
     
-    await updateDoc(donationRef, updateData);
+    console.log('Donation status updated successfully');
   } catch (error) {
     console.error('Error updating donation status:', error);
     throw error;
@@ -312,6 +441,49 @@ export const getDonationStats = async () => {
     };
   } catch (error) {
     console.error('Error fetching donation stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all donations from donors collection (for admin management)
+ */
+export const getDonations = async (limitCount = null) => {
+  try {
+    let q = query(collection(db, 'donors'), orderBy('createdAt', 'desc'));
+    if (limitCount) {
+      q = query(collection(db, 'donors'), orderBy('createdAt', 'desc'), limit(limitCount));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get donation by ID from donors collection
+ */
+export const getDonationById = async (donationId) => {
+  try {
+    const docRef = doc(db, 'donors', donationId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data()
+      };
+    } else {
+      throw new Error('Donation not found');
+    }
+  } catch (error) {
+    console.error('Error fetching donation:', error);
     throw error;
   }
 };
@@ -965,8 +1137,10 @@ export default {
   updateTestimonial,
   deleteTestimonial,
   
-  // Utilities
-  getDocumentById,
-  deleteDocument,
-  getCollectionCount
+  // Blogs
+  addBlog,
+  getBlogs,
+  getBlogById,
+  updateBlog,
+  deleteBlog
 };
