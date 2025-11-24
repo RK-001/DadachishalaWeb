@@ -11,6 +11,9 @@ const EMAILJS_USER_ID = import.meta.env.VITE_EMAILJS_USER_ID || 'your_emailjs_us
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'your_service_id';
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'your_template_id';
 
+//for production nodemailer
+//firebase functions:config:set email.user="dadachishala07@gmail.com" email.password="yfau rhcr wmgq yqxb"
+
 // Check if EmailJS is properly configured
 const isEmailJSConfigured = () => {
   return EMAILJS_USER_ID !== 'your_emailjs_user_id' && 
