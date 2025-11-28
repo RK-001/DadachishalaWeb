@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -40,6 +40,7 @@ function App() {
               <Route path="/volunteer" element={<VolunteerPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/media" element={<MediaPage />} />
+              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route 
                 path="/admin/dashboard" 
