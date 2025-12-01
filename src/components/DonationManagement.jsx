@@ -23,8 +23,8 @@ import {
   updateDonationStatus, 
   getDonationById 
 } from '../services/databaseService';
-import { generateDonationReceipt } from '../services/pdf';
-import { emailService } from '../services/emailService';
+import { functions } from '../services/firebase';
+import { httpsCallable } from 'firebase/functions';
 
 const DonationManagement = () => {
   const [donations, setDonations] = useState([]);
@@ -112,49 +112,39 @@ const DonationManagement = () => {
 
   const generateAndSendReceipt = async (donation) => {
     try {
-      // Generate PDF receipt
-      const receiptData = {
-        ...donation,
-        receiptNumber: `DCS-${Date.now()}`,
-        dateIssued: new Date().toLocaleDateString(),
-        organizationName: 'Educare (Dada Chi Shala) Educational Trust',
-        organizationAddress: 'Lane no 07, Near Suratwala Society, Kondhwa Khurd Shivneri Nagar Pune 411048',
-        organizationEmail: 'dadachishala07@gmail.com',
-        organizationPhone: '7038953001/7020396723'
+      setIsProcessing(true);
+      
+      // Prepare donation data for Cloud Function
+      const donationData = {
+        name: `${donation.firstName || ''} ${donation.lastName || ''}`.trim(),
+        email: donation.email,
+        phone: donation.phone || donation.phoneNumber,
+        amount: donation.amount,
+        paymentMethod: donation.paymentMethod || 'Online',
+        paymentId: donation.transactionId || donation.paymentId,
+        donationType: donation.category || donation.donationType,
+        message: donation.message || '',
+        panNumber: donation.panNumber || ''
       };
 
-      // Generate PDF for download
-      const pdfBlob = generateDonationReceipt(receiptData);
-      
-      // Auto-download PDF for admin to manually send
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `donation-receipt-${receiptData.receiptNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      // Send email notification without PDF attachment
-      if (donation.email) {
-        await emailService.sendDonationReceipt({
-          email: donation.email,
-          firstName: donation.firstName,
-          lastName: donation.lastName,
-          amount: donation.amount,
-          category: donation.category,
-          receiptNumber: receiptData.receiptNumber
-        });
-        
-        alert(`✅ Receipt generated and downloaded!\n\n📧 Email notification sent to ${donation.email}\n\n📄 Please manually attach the downloaded PDF to complete the process.`);
+      // Call Cloud Function to generate PDF and send email
+      const sendDonationReceipt = httpsCallable(functions, 'sendDonationReceipt');
+      const result = await sendDonationReceipt({
+        donationId: donation.id,
+        donationData: donationData
+      });
+
+      if (result.data.success) {
+        alert(`✅ Receipt generated and sent successfully!\n\n📧 Email sent to ${donation.email}\n📄 Receipt URL: ${result.data.receiptUrl}`);
       } else {
-        alert(`✅ Receipt generated and downloaded!\n\n⚠️ No email provided - please send the PDF receipt manually.`);
+        throw new Error('Failed to generate receipt');
       }
 
     } catch (error) {
       console.error('Error generating/sending receipt:', error);
       alert('❌ Error generating receipt. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 

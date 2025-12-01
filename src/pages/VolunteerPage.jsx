@@ -20,6 +20,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { addVolunteer } from '../services/databaseService';
+import { functions } from '../services/firebase';
+import { httpsCallable } from 'firebase/functions';
 
 const VolunteerPage = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -204,6 +206,23 @@ const VolunteerPage = () => {
       const volunteerId = await addVolunteer(volunteerData);
       
       console.log('Volunteer application submitted successfully with ID:', volunteerId);
+      
+      // Send confirmation email via Cloud Function
+      try {
+        const sendVolunteerConfirmation = httpsCallable(functions, 'sendVolunteerConfirmation');
+        await sendVolunteerConfirmation({
+          volunteerData: {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            skills: formData.skills.join(', ')
+          }
+        });
+        console.log('Confirmation email sent successfully');
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // Don't fail the application if email fails
+      }
       
       setSubmitMessage('🎉 Thank you for your application! We have received your volunteer registration and will contact you within 5-7 business days. Your application ID is: ' + volunteerId);
       
