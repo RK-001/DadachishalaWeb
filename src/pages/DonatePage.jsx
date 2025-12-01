@@ -24,7 +24,7 @@ const DonatePage = () => {
   useEffect(() => {
     loadRazorpayScript()
       .then(() => setRazorpayReady(true))
-      . catch((err) => console. error('Razorpay load error:', err));
+      .catch((err) => console.error('Razorpay load error:', err));
   }, []);
 
   const donationCategories = [
@@ -83,7 +83,7 @@ const DonatePage = () => {
   // Handle Razorpay Payment
   const handleRazorpayPayment = async (data) => {
     if (!razorpayReady) {
-      alert('Payment gateway is loading. Please try again.');
+      alert('Payment gateway is loading.Please try again.');
       return;
     }
 
@@ -93,7 +93,7 @@ const DonatePage = () => {
       amount: parseFloat(data.amount),
       donorInfo: {
         name: `${data.firstName} ${data.lastName}`,
-        email: data. email,
+        email: data.email,
         phone: data.phoneno || '',
         panNumber: data.panNumber || '',
         message: `${selectedCategory} - ${selectedFrequency}`
@@ -106,7 +106,7 @@ const DonatePage = () => {
       },
       onFailure: (error) => {
         setIsSubmitting(false);
-        alert(error.message || 'Payment failed. Please try again.');
+        alert(error.message || 'Payment failed.Please try again.');
       }
     });
   };
@@ -122,13 +122,13 @@ const DonatePage = () => {
 
     try {
       const timestamp = Date.now();
-      const fileRef = ref(storage, `donations/${timestamp}_${uploadedFile. name}`);
+      const fileRef = ref(storage, `donations/${timestamp}_${uploadedFile.name}`);
       await uploadBytes(fileRef, uploadedFile);
       const screenshotURL = await getDownloadURL(fileRef);
 
       const donationData = {
-        ... data,
-        name: `${data. firstName} ${data. lastName}`,
+        ...data,
+        name: `${data.firstName} ${data.lastName}`,
         amount: parseFloat(data.amount),
         category: selectedCategory,
         frequency: selectedFrequency,
@@ -162,7 +162,7 @@ const DonatePage = () => {
       setPreviewUrl(null);
     } catch (error) {
       console.error('Error:', error);
-      alert('Error submitting donation. Please try again.');
+      alert('Error submitting donation.Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -251,7 +251,7 @@ const DonatePage = () => {
                         <div className="text-sm font-medium text-primary-700">{category.name}</div>
                         <div className="text-sm text-center text-primary-500">{category.frequency}</div>
                         <div className="text-sm font-semibold text-primary-600 text-center">
-                          ₹{category. amount. toLocaleString()}
+                          ₹{category.amount.toLocaleString()}
                         </div>
                       </div>
                     ))}
@@ -315,7 +315,7 @@ const DonatePage = () => {
                           className="input-field"
                           placeholder="Enter first name"
                         />
-                        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName. message}</p>}
+                        {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-primary-700 mb-2">Last Name *</label>
@@ -333,11 +333,11 @@ const DonatePage = () => {
                       <label className="block text-sm font-medium text-primary-700 mb-2">Email *</label>
                       <input
                         type="email"
-                        {... register('email', { required: 'Email is required' })}
+                        {...register('email', { required: 'Email is required' })}
                         className="input-field"
                         placeholder="Enter email address"
                       />
-                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email. message}</p>}
+                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                     </div>
 
                     <div>
@@ -357,7 +357,7 @@ const DonatePage = () => {
                         </label>
                         <input
                           type="text"
-                          {... register('panNumber')}
+                          {...register('panNumber')}
                           className="input-field uppercase"
                           placeholder="ABCDE1234F"
                           maxLength={10}
@@ -404,7 +404,7 @@ const DonatePage = () => {
                     {/* Security Note */}
                     <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
                       <div className="flex items-start space-x-3">
-                        <Shield className="w-5 h-5 text-primary-600 mt-0. 5" />
+                        <Shield className="w-5 h-5 text-primary-600 mt-0.5" />
                         <p className="text-sm text-primary-800">
                           {paymentMethod === 'razorpay'
                             ? '🔒 Secured by Razorpay.  Your card details never touch our servers.'
@@ -494,10 +494,10 @@ const DonatePage = () => {
                   <div className="space-y-3 text-sm">
                     <div className="flex items-start space-x-3">
                       <MapPin className="w-4 h-4 text-primary-600 mt-0.5" />
-                      <p className="text-primary-600">{organizationDetails. registeredAddress}</p>
+                      <p className="text-primary-600">{organizationDetails.registeredAddress}</p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <Mail className="w-4 h-4 text-primary-600 mt-0. 5" />
+                      <Mail className="w-4 h-4 text-primary-600 mt-0.5" />
                       <p className="text-primary-600">{organizationDetails.email}</p>
                     </div>
                     <div className="flex items-start space-x-3">
@@ -505,8 +505,8 @@ const DonatePage = () => {
                       <p className="text-primary-600">{organizationDetails.contact}</p>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <Globe className="w-4 h-4 text-primary-600 mt-0. 5" />
-                      <a href={`https://${organizationDetails. website}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline flex items-center">
+                      <Globe className="w-4 h-4 text-primary-600 mt-0.5" />
+                      <a href={`https://${organizationDetails.website}`} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline flex items-center">
                         {organizationDetails.website} <ExternalLink className="w-3 h-3 ml-1" />
                       </a>
                     </div>
