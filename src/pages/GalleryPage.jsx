@@ -184,10 +184,10 @@ const GalleryPage = () => {
         <div className="container-custom text-center">
           <Camera className="w-16 h-16 mx-auto mb-6 text-secondary-400" />
           <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-            Gallery & Media
+            Achievements & Milestones
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-            Explore our journey through photos, videos, awards, and media coverage
+            Celebrating Impact, Change & the Power of Education. From teaching under a tree to educating hundreds daily — our journey is a testimony to how compassion + community can transform lives.
           </p>
         </div>
       </section>
@@ -201,7 +201,7 @@ const GalleryPage = () => {
               Awards & Recognitions
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Recognition for our commitment to education and community development
+              Recognition fuels responsibility — each award reminds us why we started and why we continue.
             </p>
           </div>
 
@@ -257,7 +257,7 @@ const GalleryPage = () => {
               Photo Gallery
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Moments of joy, learning, and growth captured through our lens
+              Moments that tell our story. Our camera captures what words can’t — a child’s first notebook, a volunteer teaching under the sun, laughter, colours, dreams taking flight.
             </p>
           </div>
 

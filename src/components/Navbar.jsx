@@ -11,18 +11,19 @@ const NAV_ITEMS = [
   { path: '/gallery', label: 'Gallery', icon: Image },
   { path: '/events', label: 'Events', icon: Calendar },
   { path: '/volunteer', label: 'Volunteer', icon: Users },
+
 ];
 
 const NavLink = memo(({ path, label, icon: Icon, isActive, onClick, isMobile }) => (
   <Link
     to={path}
     onClick={onClick}
-    className={`flex items-center ${isMobile ? 'space-x-3 px-4 py-3' : 'space-x-1 px-4 py-2'} rounded-lg transition-all duration-200 ${
+    className={`flex items-center ${isMobile ? 'space-x-3 px-3 py-2' : 'space-x-1 px-2 py-1'} rounded-lg transition-all duration-200 ${
       isActive ? 'bg-primary-600 text-white shadow-md' : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'
     }`}
   >
-    <Icon size={isMobile ? 20 : 16} />
-    <span className="font-medium">{label}</span>
+    <Icon size={isMobile ? 18 : 14} />
+    <span className="font-medium text-sm">{label}</span>
   </Link>
 ));
 
@@ -40,11 +41,11 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex justify-between items-center py-2">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <img src="/logos/logo.png" alt="Dada Chi Shala Logo" className="h-10 md:h-14 w-auto object-contain" loading="eager" />
-            <div>
-              <h1 className="text-lg md:text-xl font-heading font-bold text-primary-800">DadaChiShala</h1>
-              <p className="text-[10px] md:text-xs text-neutral-600">Educare Education Trust</p>
+          <Link to="/" className="flex items-center space-x-3 min-w-0">
+            <img src="/logos/logo.png" alt="Dada Chi Shala Logo" className="h-10 md:h-14 w-auto object-contain flex-shrink-0" loading="eager" />
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-xl font-heading font-bold text-primary-800 truncate">Educare(DadaChiShala)</h1>
+              <p className="text-[10px] md:text-xs text-neutral-600 truncate">Education Trust</p>
             </div>
           </Link>
 

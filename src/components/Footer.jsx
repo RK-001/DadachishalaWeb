@@ -1,6 +1,48 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Users, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+
+const SOCIAL_LINKS = [
+  { href: 'https://www.facebook.com/dadachishala/', label: 'Facebook', Icon: Facebook },
+  { href: 'https://www.twitter.com/', label: 'Twitter', Icon: Twitter },
+  { href: 'https://www.instagram.com/dadachishala/?hl=en', label: 'Instagram', Icon: Instagram },
+  { href: 'https://www.youtube.com/dadachishalastreetschool', label: 'YouTube', Icon: Youtube }
+];
+
+const QUICK_LINKS = [
+  { to: '/about', label: 'About Us' },
+  { to: '/programs', label: 'Our Programs' },
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/events', label: 'Events' },
+  { to: '/success-stories', label: 'Success Stories' }
+];
+
+const INVOLVE_LINKS = [
+  { to: '/donate', label: 'Make a Donation', Icon: Heart },
+  { to: '/volunteer', label: 'Become a Volunteer', Icon: Users }
+];
+
+const SocialButton = memo(({ href, label, Icon }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label={label}
+    className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors"
+  >
+    <Icon size={16} className="text-gray-400 hover:text-white" />
+  </a>
+));
+SocialButton.displayName = 'SocialButton';
+
+const NavLinkItem = memo(({ to, label }) => (
+  <li>
+    <Link to={to} aria-label={label} className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
+      {label}
+    </Link>
+  </li>
+));
+NavLinkItem.displayName = 'NavLinkItem';
 
 const Footer = () => {
   return (
@@ -12,17 +54,18 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-12 h-12 bg-white rounded-xl p-2 shadow-lg flex items-center justify-center">
-                <img 
-                  src="/logos/logo.png" 
-                  alt="Dada Chi Shala Logo" 
+                <img
+                  src="/logos/logo.png"
+                  alt="Dada Chi Shala Logo"
+                  loading="lazy"
                   className="w-full h-full object-contain"
                 />
               </div>
               <div>
                 <h3 className="text-xl font-heading font-bold text-white">
-                  Dada Chi Shala
+                  Educare(Dada Chi Shala)
                 </h3>
-                <p className="text-sm text-gray-400">Educare Education Trust</p>
+                <p className="text-sm text-gray-400">Education Trust</p>
               </div>
             </div>
             <p className="text-gray-300 mb-4 text-sm">
@@ -31,18 +74,7 @@ const Footer = () => {
             
             {/* Social Media */}
             <div className="flex space-x-3">
-              <a href="https://www.facebook.com/dadachishala/" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                <Facebook size={16} className="text-gray-400 hover:text-white" />
-              </a>
-              <a href="#" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                <Twitter size={16} className="text-gray-400 hover:text-white" />
-              </a>
-              <a href="https://www.instagram.com/dadachishala/?hl=en" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                <Instagram size={16} className="text-gray-400 hover:text-white" />
-              </a>
-              <a href="https://www.youtube.com/dadachishalastreetschool" className="w-8 h-8 bg-white/10 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-colors">
-                <Youtube size={16} className="text-gray-400 hover:text-white" />
-              </a>
+              {SOCIAL_LINKS.map(s => <SocialButton key={s.href} href={s.href} label={s.label} Icon={s.Icon} />)}
             </div>
           </div>
 
@@ -50,31 +82,7 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-white">Quick Links</h4>
             <ul className="space-y-2">
-              <li>
-                <Link to="/about" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/programs" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
-                  Our Programs
-                </Link>
-              </li>
-              <li>
-                <Link to="/gallery" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
-                  Gallery
-                </Link>
-              </li>
-              <li>
-                <Link to="/events" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
-                  Events
-                </Link>
-              </li>
-              <li>
-                <Link to="/success-stories" className="text-gray-300 hover:text-primary-400 transition-colors text-sm">
-                  Success Stories
-                </Link>
-              </li>
+              {QUICK_LINKS.map(l => <NavLinkItem key={l.to} to={l.to} label={l.label} />)}
             </ul>
           </div>
 
@@ -82,20 +90,12 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-white">Get Involved</h4>
             <div className="space-y-3">
-              <Link 
-                to="/donate" 
-                className="flex items-center space-x-2 text-gray-300 hover:text-primary-400 transition-colors text-sm"
-              >
-                <Heart size={16} />
-                <span>Make a Donation</span>
-              </Link>
-              <Link 
-                to="/volunteer" 
-                className="flex items-center space-x-2 text-gray-300 hover:text-primary-400 transition-colors text-sm"
-              >
-                <Users size={16} />
-                <span>Become a Volunteer</span>
-              </Link>
+              {INVOLVE_LINKS.map(({ to, label, Icon }) => (
+                <Link key={to} to={to} aria-label={label} className="flex items-center space-x-2 text-gray-300 hover:text-primary-400 transition-colors text-sm">
+                  <Icon size={16} />
+                  <span>{label}</span>
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -123,7 +123,7 @@ const Footer = () => {
         <div className="border-t border-gray-700/50 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              © 2025 Dada Chi Shala. All rights reserved.
+              © 2025 Educare (Dada Chi Shala). All rights reserved.
             </p>
             <div className="flex space-x-4">
               <Link to="/privacy" className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
@@ -143,4 +143,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default memo(Footer);

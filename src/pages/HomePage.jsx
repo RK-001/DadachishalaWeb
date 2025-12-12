@@ -5,16 +5,15 @@ import EventCard from '../components/EventCard';
 import AnimatedCounter from '../components/AnimatedCounter';
 import { getEvents, getGalleryItems, getSuccessStories, getTestimonials, getAwards } from '../services/databaseService';
 
-// Static data moved outside component to prevent recreation on each render
+// Updated to text-first stats as requested in changesss.md
 const IMPACT_STATS = [
-  { value: 1.7, label: 'Students Taught', suffix: 'K+' },
-  { value: 10, label: 'Branches in Pune', suffix: '' },
-  { value: 12, label: 'Slum Areas Covered', suffix: '' },
-  { value: 257, label: 'Children Deaddicted', suffix: '' },
-  { value: 450, label: 'Current Students', suffix: '+' },
-  { value: 524, label: 'Students in Schools', suffix: '' },
-  { value: 100, label: 'Campaigns', suffix: '+' },
-  { value: 250, label: 'Volunteers', suffix: '' }
+  { label: '1700+ underprivileged children educated through campaigns and field classes' },
+  { label: '257+ children rescued from begging & restored to education' },
+  { label: '524+ students mainstreamed into schools across Pune' },
+  { label: '10 branches actively functioning in slum & signal areas' },
+  { label: '250+ volunteers joined our movement' },
+  { label: 'Research paper submitted to UNICEF on street children education challenges' },
+  { label: 'Government GR achieved ensuring admission for underdocumented kids' }
 ];
 
 const HERO_STATS = [
@@ -226,7 +225,9 @@ const HomePage = () => {
                     <Sparkles className="w-4 h-4 text-yellow-300" /><span>Transforming Lives Since 2010</span>
                   </div>
                   <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight">
-                    Empowering<span className="block text-yellow-300">Every Child's</span><span className="block">Future</span>
+                    <span className="block text-white">Empowering</span>
+                    <span className="block text-yellow-300">Every Child's</span>
+                    <span className="block text-white">Future</span>
                   </h1>
                   <p className="text-xl md:text-2xl text-gray-100 leading-relaxed max-w-2xl">
                     {currentSlideData?.description || "Providing holistic support to underprivileged children through education, healthcare, and community development across Maharashtra."}
@@ -285,21 +286,17 @@ const HomePage = () => {
       <section className="py-12 bg-gradient-to-r from-white to-gray-50 border-t border-primary-100">
         <div className="container-custom">
           <SectionHeader badge="Our Impact" badgeIcon={<Target className="w-4 h-4" />} title="Transforming Lives Every Day" 
-            description="The growth of Organisation stands as a testament to the power of community-driven efforts and the profound impact that dedicated education can have on transforming lives." />
+            description={"Real change happens when a community stands together. At Dada Chi Shala, every notebook, every class, every smile is a step towards breaking the cycle of poverty and building a future full of possibilities. Our numbers reflect not just statistics, they reflect lives transformed."} />
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
             {IMPACT_STATS.map((stat, i) => (
-              <div key={i} className="group bg-white rounded-xl p-5 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+              <div key={i} className="group bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
                 <div className="relative mb-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <div className="text-2xl font-bold text-white">
-                      <AnimatedCounter end={stat.value} duration={2000} suffix={stat.suffix} startOnView />
-                    </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full mx-auto flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-xl text-white">⭐</span>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">{stat.label}</h3>
-                <div className="h-1 w-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full mx-auto opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <h3 className="font-semibold text-gray-900 text-sm md:text-base">{stat.label}</h3>
               </div>
             ))}
           </div>
