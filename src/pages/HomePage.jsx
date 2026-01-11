@@ -222,7 +222,7 @@ const HomePage = () => {
               <div className="text-white space-y-8 pl-6 md:pl-8 lg:pl-12">
                 <div className="space-y-6">
                   <div className="inline-flex items-center space-x-2 bg-white/10 rounded-full px-4 py-2 text-sm font-medium">
-                    <Sparkles className="w-4 h-4 text-yellow-300" /><span>Transforming Lives Since 2010</span>
+                    <Sparkles className="w-4 h-4 text-yellow-300" /><span>Transforming Lives Since 2020</span>
                   </div>
                   <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold leading-tight">
                     <span className="block text-white">Empowering</span>

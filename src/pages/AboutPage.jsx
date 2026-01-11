@@ -184,12 +184,12 @@ const AboutPage = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl p-8 md:p-12 text-yellow-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group border-2 border-yellow-700">
+            <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-8 md:p-12 text-prim shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group border-2 border-primary-700">
               <div className="text-center max-w-4xl mx-auto">
-                <h3 className="text-2xl md:text-3xl font-bold mb-6 text-yellow-900">Recognition & Support</h3>
-                <div className="space-y-4 text-yellow-900 leading-relaxed text-lg">
+                <h3 className="text-2xl md:text-3xl font-bold mb-6 text-yellow-900">Our Inspiration</h3>
+                <div className="space-y-4 text-primary-900 leading-relaxed text-lg">
                   <p>
-                    Our journey has been recognized widely, thanks to the unwavering support of <strong className="text-yellow-800">Dr. Sindhutai Sapkal (Maai)</strong>, extensive media coverage, and local newspapers. Their belief in our mission has amplified our voice and helped us gain mass recognition, furthering our efforts in education and child welfare.
+                    Our journey has been recognized widely, thanks to the unwavering support of <strong className="text-primary-600">Dr. Sindhutai Sapkal (Maai)</strong>, extensive media coverage, and local newspapers. Their belief in our mission has amplified our voice and helped us gain mass recognition, furthering our efforts in education and child welfare.
                   </p>
                   <p className="font-medium">
                     "The growth of Dadachishala stands as a testament to the power of community-driven initiatives and the transformative impact of education."
