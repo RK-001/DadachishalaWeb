@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Navigation, Users, Clock, Heart, UserPlus } from 'lucide-react';
-import { getBranches } from '../services/databaseService';
+import { useBranches } from '../hooks/useFirebaseQueries';
 import Card from '../components/Card';
 import { formatTimings } from '../utils/helpers';
+import SEO from '../components/SEO';
 
 const Spinner = ({ className = '', text, textClass = 'text-gray-700' }) => (
   <div className={`text-center ${className}`}>
@@ -26,18 +27,17 @@ const InfoBadge = ({ icon: Icon, children }) => (
 
 const BranchesPage = () => {
   const navigate = useNavigate();
-  const [branches, setBranches] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // React Query hook - automatic caching and refetching
+  const { data: branches = [], isLoading: loading } = useBranches();
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    getBranches()
-      .then(data => { setBranches(data); data.length && setSelectedBranch(data[0]); })
-      .catch(e => console.error('Error fetching branches:', e))
-      .finally(() => setLoading(false));
-  }, []);
+    if (branches.length && !selectedBranch) {
+      setSelectedBranch(branches[0]);
+    }
+  }, [branches, selectedBranch]);
 
   useEffect(() => {
     if (!branches.length) return;
@@ -77,8 +77,30 @@ const BranchesPage = () => {
     </>
   );
 
+  const branchesSchema = {
+    "@context": "https://schema.org",
+    "@type": "NGO",
+    "name": "Dada Chi Shala",
+    "department": branches.map(branch => ({
+      "@type": "EducationalOrganization",
+      "name": branch.branch_name,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": branch.location
+      }
+    }))
+  };
+
   return (
-    <div className="min-h-screen">
+    <>
+      <SEO
+        title="Our Branches - Dada Chi Shala | 10 Education Centers Across Pune"
+        description="Dada Chi Shala operates 10 branches across Pune serving 450+ street children. Find branches in Hadapsar, Kondhwa, Katraj, Sinhagad Road and more. Visit us, volunteer or enroll a child."
+        keywords="Dadachishala branches Pune, NGO locations Pune, street children schools Pune, education centers Pune, Hadapsar NGO, Kondhwa education"
+        canonicalUrl="/branches"
+        structuredData={branchesSchema}
+      />
+      <div className="min-h-screen">
       {/* Hero Section */}
       <div className="relative overflow-hidden h-64 md:h-96">
         {loading ? (
@@ -175,7 +197,8 @@ const BranchesPage = () => {
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

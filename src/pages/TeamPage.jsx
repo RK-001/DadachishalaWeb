@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { 
   Users, 
   Heart, 
@@ -135,23 +136,26 @@ const TeamPage = () => {
               </h1>
             </div>
             <p className="text-xl md:text-2xl text-primary-100 mb-8 leading-relaxed">
-              Dedicated individuals working together to transform lives through education, 
-              care, and community support. Meet the passionate people behind our mission.
+              Dedicated hearts. United mission. Brighter futures. Education transforms lives — and behind every transformed life, there is a teacher, a volunteer, a dreamer, a believer.
+              At Dada Chi Shala, our strength is our people — passionate individuals who work every day to turn footpaths into classrooms and underprivileged children into confident learners.
             </p>
             
             {/* Team Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-              {teamStats.map((stat, index) => (
-                <div 
-                  key={index}
-                  className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-all duration-300"
-                >
-                  <div className="text-3xl md:text-4xl font-bold text-secondary-300 mb-2">
-                    {stat.value}{stat.suffix}
-                  </div>
-                  <p className="text-primary-100 font-medium">{stat.label}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-6 mt-12">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-all duration-300">
+                <div className="text-3xl md:text-4xl font-bold text-secondary-300 mb-2">1</div>
+                <p className="text-primary-100 font-medium">Core Leadership Team</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-all duration-300">
+                <div className="text-3xl md:text-4xl font-bold text-secondary-300 mb-2">250+</div>
+                <p className="text-primary-100 font-medium">Active Volunteers</p>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center transform hover:scale-105 transition-all duration-300">
+                <div className="text-3xl md:text-4xl font-bold text-secondary-300 mb-2">5+</div>
+                <p className="text-primary-100 font-medium">Years of Community Work</p>
+              </div>
             </div>
           </div>
         </div>

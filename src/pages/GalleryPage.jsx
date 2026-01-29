@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SEO from '../components/SEO';
 import { 
   Award, 
   Camera, 
@@ -21,70 +22,34 @@ import {
   BookOpen,
   PenTool
 } from 'lucide-react';
-import { 
-  getGalleryItems,
-  getAwards,
-  getNewsArticles,
-  getVideos,
-  getBlogs
-} from '../services/databaseService';
+import { useGalleryItems, useAwards, useNews, useVideos, useBlogs } from '../hooks/useFirebaseQueries';
 import BlogCard from '../components/BlogCard';
 import BlogModal from '../components/BlogModal';
 
 const GalleryPage = () => {
+  // React Query hooks - automatic caching and refetching
+  const { data: awardsData = [], isLoading: awardsLoading, error: awardsError } = useAwards();
+  const { data: photos = [], isLoading: photosLoading, error: photosError } = useGalleryItems();
+  const { data: videos = [], isLoading: videosLoading, error: videosError } = useVideos();
+  const { data: newsItems = [], isLoading: newsLoading, error: newsError } = useNews();
+  const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedBlogFilter, setSelectedBlogFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // Data states from Firebase
-  const [awards, setAwards] = useState([]);
-  const [photos, setPhotos] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [newsItems, setNewsItems] = useState([]);
-  const [blogs, setBlogs] = useState([]);
+  // Aggregate loading and error states
+  const loading = awardsLoading || photosLoading || videosLoading || newsLoading || blogsLoading;
+  const error = awardsError || photosError || videosError || newsError || blogsError;
 
-  // Load data from Firebase on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch all data in parallel
-        const [awardsData, photosData, videosData, newsData, blogsData] = await Promise.all([
-          getAwards(),
-          getGalleryItems(),
-          getVideos(),
-          getNewsArticles(),
-          getBlogs()
-        ]);
-
-        // Process awards data to add icons
-        const processedAwards = awardsData.map(award => ({
-          ...award,
-          icon: getAwardIcon(award.title)
-        }));
-
-        setAwards(processedAwards);
-        setPhotos(photosData);
-        setVideos(videosData);
-        setNewsItems(newsData);
-        setBlogs(blogsData);
-      } catch (err) {
-        console.error('Error loading gallery data:', err);
-        setError('Failed to load gallery content. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+  // Process awards data to add icons
+  const awards = awardsData.map(award => ({
+    ...award,
+    icon: getAwardIcon(award.title)
+  }));
 
   // Function to determine award icon based on title
   const getAwardIcon = (title) => {
@@ -184,10 +149,10 @@ const GalleryPage = () => {
         <div className="container-custom text-center">
           <Camera className="w-16 h-16 mx-auto mb-6 text-secondary-400" />
           <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-            Gallery & Media
+            Achievements & Milestones
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-            Explore our journey through photos, videos, awards, and media coverage
+            Celebrating Impact, Change & the Power of Education. From teaching under a tree to educating hundreds daily — our journey is a testimony to how compassion + community can transform lives.
           </p>
         </div>
       </section>
@@ -201,7 +166,7 @@ const GalleryPage = () => {
               Awards & Recognitions
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Recognition for our commitment to education and community development
+              Recognition fuels responsibility — each award reminds us why we started and why we continue.
             </p>
           </div>
 
@@ -257,7 +222,7 @@ const GalleryPage = () => {
               Photo Gallery
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Moments of joy, learning, and growth captured through our lens
+              Moments that tell our story. Our camera captures what words can’t — a child’s first notebook, a volunteer teaching under the sun, laughter, colours, dreams taking flight.
             </p>
           </div>
 

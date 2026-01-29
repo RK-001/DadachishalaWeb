@@ -13,40 +13,42 @@ const NAV_ITEMS = [
   { path: '/volunteer', label: 'Volunteer', icon: Users },
 ];
 
-const NavLink = memo(({ path, label, icon: Icon, isActive, onClick, isMobile }) => (
-  <Link
-    to={path}
-    onClick={onClick}
-    className={`flex items-center ${isMobile ? 'space-x-3 px-4 py-3' : 'space-x-1 px-4 py-2'} rounded-lg transition-all duration-200 ${
-      isActive ? 'bg-primary-600 text-white shadow-md' : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'
-    }`}
-  >
-    <Icon size={isMobile ? 20 : 16} />
-    <span className="font-medium">{label}</span>
+const Logo = memo(() => (
+  <Link to="/" className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+    <img src="/logos/logo.png" alt="Dada Chi Shala Logo" className="h-10 sm:h-12 md:h-14 w-auto object-contain" loading="eager" />
+    <div className="min-w-0">
+      <h1 className="text-base sm:text-lg md:text-xl font-heading font-bold text-primary-800 truncate">
+        Educare(DadaChiShala)
+      </h1>
+      <p className="text-[9px] sm:text-[10px] md:text-xs text-neutral-600 truncate">Education Trust</p>
+    </div>
   </Link>
 ));
+Logo.displayName = 'Logo';
 
+const NavLink = memo(({ path, label, icon: Icon, isActive, onClick, isMobile }) => (
+  <Link to={path} onClick={onClick} className={`flex items-center ${
+    isMobile ? 'space-x-3 px-4 py-3 text-base' : 'space-x-1 px-3 py-2 text-sm'
+  } font-medium rounded-lg transition-all duration-200 ${
+    isActive ? 'bg-primary-600 text-white shadow-md' : 'text-gray-700 hover:bg-primary-50 hover:text-primary-600'
+  }`}>
+    <Icon size={isMobile ? 20 : 16} />
+    <span>{label}</span>
+  </Link>
+));
 NavLink.displayName = 'NavLink';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { pathname } = useLocation();
-
-  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
   const toggleMenu = useCallback(() => setIsMenuOpen(prev => !prev), []);
+  const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50">
       <div className="container-custom">
-        <div className="flex justify-between items-center py-2">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
-            <img src="/logos/logo.png" alt="Dada Chi Shala Logo" className="h-10 md:h-14 w-auto object-contain" loading="eager" />
-            <div>
-              <h1 className="text-lg md:text-xl font-heading font-bold text-primary-800">DadaChiShala</h1>
-              <p className="text-[10px] md:text-xs text-neutral-600">Educare Education Trust</p>
-            </div>
-          </Link>
+        <div className="flex justify-between items-center py-3 sm:py-4">
+          <Logo />
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
@@ -56,21 +58,17 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={toggleMenu}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button type="button" onClick={toggleMenu} 
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors active:bg-gray-200"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={isMenuOpen}>
+            {isMenuOpen ? <X size={24} className="text-gray-700" /> : <Menu size={24} className="text-gray-700" />}
           </button>
         </div>
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200">
-            <div className="flex flex-col space-y-2">
+          <div className="lg:hidden py-4 border-t border-gray-200 animate-fadeIn">
+            <div className="flex flex-col space-y-1">
               {NAV_ITEMS.map(item => (
                 <NavLink key={item.path} {...item} isActive={pathname === item.path} onClick={closeMenu} isMobile />
               ))}

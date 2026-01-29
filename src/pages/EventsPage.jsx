@@ -3,6 +3,7 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import EventCard from '../components/EventCard';
+import SEO from '../components/SEO';
 
 const EventsPage = () => {
   const [events, setEvents] = useState([]);
@@ -31,8 +32,31 @@ const EventsPage = () => {
     }
   };
 
+  const eventsSchema = {
+    "@context": "https://schema.org",
+    "@type": "EventSeries",
+    "name": "Dada Chi Shala Community Events",
+    "organizer": {
+      "@type": "NGO",
+      "name": "Dada Chi Shala",
+      "url": "https://dadachishala.org"
+    },
+    "location": {
+      "@type": "Place",
+      "name": "Pune, Maharashtra"
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <SEO
+        title="Events - Dada Chi Shala | Community Programs & Activities in Pune"
+        description="Join our educational programs, volunteer drives, and community initiatives. Upcoming events supporting street children education across 10 branches in Pune, Maharashtra."
+        keywords="NGO events Pune, community programs, educational events, volunteer activities, charity events Pune, street children events"
+        canonicalUrl="/events"
+        structuredData={eventsSchema}
+      />
+      <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
         <div className="container-custom text-center">
@@ -71,7 +95,8 @@ const EventsPage = () => {
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

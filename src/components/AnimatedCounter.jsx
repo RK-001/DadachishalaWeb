@@ -1,94 +1,108 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo, useMemo } from 'react';
 
-const AnimatedCounter = ({ 
-  end, 
-  duration = 2000, 
-  suffix = '', 
-  prefix = '', 
+/**
+ * Optimized AnimatedCounter Component
+ * - Secure input sanitization
+ * - Memory leak prevention
+ * - Latest React patterns (useMemo, cleanup)
+ * - Reduced re-renders
+ */
+const AnimatedCounter = memo(({
+  end,
+  duration = 2000,
+  suffix = '',
+  prefix = '',
   className = '',
-  startOnView = true 
+  startOnView = true
 }) => {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const counterRef = useRef(null);
+  const animationRef = useRef(null);
 
-  // Parse the end value to handle strings like "300+" or "10+"
-  const parseEndValue = (value) => {
-    if (typeof value === 'string') {
-      // Extract number from strings like "300+" or "1000+"
-      const match = value.match(/(\d+)/);
-      return match ? parseInt(match[1]) : 0;
+  // Secure: Sanitize and parse end value (prevent XSS/injection)
+  const numericEnd = useMemo(() => {
+    if (typeof end === 'number') return Math.max(0, Math.floor(end));
+    if (typeof end === 'string') {
+      const parsed = parseInt(end.replace(/\D/g, ''), 10);
+      return isNaN(parsed) ? 0 : Math.max(0, parsed);
     }
-    return typeof value === 'number' ? value : 0;
-  };
+    return 0;
+  }, [end]);
 
-  const numericEnd = parseEndValue(end);
+  // Memoize formatted number
+  const formattedCount = useMemo(() => count.toLocaleString(), [count]);
 
   useEffect(() => {
+    // Early start if not waiting for viewport
     if (!startOnView && !hasStarted) {
       setHasStarted(true);
-      startCounting();
-      return;
+      
+      const startTime = performance.now();
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        
+        if (elapsed < duration) {
+          const progress = elapsed / duration;
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.floor(numericEnd * easeOut));
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          setCount(numericEnd);
+          animationRef.current = null;
+        }
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
+      return () => {
+        if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      };
     }
+
+    // IntersectionObserver for viewport detection
+    if (!counterRef.current || hasStarted) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !hasStarted) {
           setHasStarted(true);
-          startCounting();
+          
+          const startTime = performance.now();
+          const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            
+            if (elapsed < duration) {
+              const progress = elapsed / duration;
+              const easeOut = 1 - Math.pow(1 - progress, 3);
+              setCount(Math.floor(numericEnd * easeOut));
+              animationRef.current = requestAnimationFrame(animate);
+            } else {
+              setCount(numericEnd);
+              animationRef.current = null;
+            }
+          };
+          
+          animationRef.current = requestAnimationFrame(animate);
         }
       },
       { threshold: 0.1, rootMargin: '50px' }
     );
 
-    if (counterRef.current) {
-      observer.observe(counterRef.current);
-    }
+    observer.observe(counterRef.current);
 
     return () => {
-      if (counterRef.current) {
-        observer.unobserve(counterRef.current);
-      }
+      observer.disconnect();
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [hasStarted, startOnView, numericEnd]);
-
-  const startCounting = () => {
-    console.log(`Starting counter animation for value: ${numericEnd}`);
-    const startTime = Date.now();
-    const startValue = 0;
-
-    const updateCount = () => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      const currentCount = Math.floor(easeOutQuart * numericEnd);
-
-      setCount(currentCount);
-
-      if (progress < 1) {
-        requestAnimationFrame(updateCount);
-      } else {
-        setCount(numericEnd);
-        console.log(`Counter animation completed: ${numericEnd}`);
-      }
-    };
-
-    requestAnimationFrame(updateCount);
-  };
-
-  // Format large numbers with commas
-  const formatNumber = (num) => {
-    return num.toLocaleString();
-  };
+  }, [startOnView, hasStarted, numericEnd, duration]);
 
   return (
-    <span ref={counterRef} className={className}>
-      {prefix}{formatNumber(count)}{suffix}
+    <span ref={counterRef} className={className} aria-live="polite">
+      {prefix}{formattedCount}{suffix}
     </span>
   );
-};
+});
+
+AnimatedCounter.displayName = 'AnimatedCounter';
 
 export default AnimatedCounter;
