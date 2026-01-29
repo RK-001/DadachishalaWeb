@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import MaintenancePage from './pages/MaintenancePage'
@@ -72,45 +73,49 @@ function App() {
 
   // Allow access to admin routes even in maintenance mode
   // This allows admins to log in and turn off maintenance mode
-  if (maintenanceMode) {
+  if (maintenanceMode && import.meta.env.MODE === 'production') {
     return <MaintenancePage />
-  }return (
+  }
+
+  return (
     <AuthProvider>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/branches" element={<BranchesPage />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/gallery" element={<GalleryPage />} />
-              <Route path="/events" element={<EventsPage />} />
-              <Route path="/donate" element={<DonatePage />} />
-              <Route path="/volunteer" element={<VolunteerPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/media" element={<MediaPage />} />
-              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route 
-                path="/admin/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <NotificationProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/branches" element={<BranchesPage />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/gallery" element={<GalleryPage />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/donate" element={<DonatePage />} />
+                <Route path="/volunteer" element={<VolunteerPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/media" element={<MediaPage />} />
+                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route 
+                  path="/admin/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   )
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SEO from '../components/SEO';
 import { 
   Award, 
   Camera, 
@@ -21,70 +22,34 @@ import {
   BookOpen,
   PenTool
 } from 'lucide-react';
-import { 
-  getGalleryItems,
-  getAwards,
-  getNewsArticles,
-  getVideos,
-  getBlogs
-} from '../services/databaseService';
+import { useGalleryItems, useAwards, useNews, useVideos, useBlogs } from '../hooks/useFirebaseQueries';
 import BlogCard from '../components/BlogCard';
 import BlogModal from '../components/BlogModal';
 
 const GalleryPage = () => {
+  // React Query hooks - automatic caching and refetching
+  const { data: awardsData = [], isLoading: awardsLoading, error: awardsError } = useAwards();
+  const { data: photos = [], isLoading: photosLoading, error: photosError } = useGalleryItems();
+  const { data: videos = [], isLoading: videosLoading, error: videosError } = useVideos();
+  const { data: newsItems = [], isLoading: newsLoading, error: newsError } = useNews();
+  const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
+  
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [blogModalOpen, setBlogModalOpen] = useState(false);
   const [selectedBlogFilter, setSelectedBlogFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // Data states from Firebase
-  const [awards, setAwards] = useState([]);
-  const [photos, setPhotos] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [newsItems, setNewsItems] = useState([]);
-  const [blogs, setBlogs] = useState([]);
+  // Aggregate loading and error states
+  const loading = awardsLoading || photosLoading || videosLoading || newsLoading || blogsLoading;
+  const error = awardsError || photosError || videosError || newsError || blogsError;
 
-  // Load data from Firebase on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch all data in parallel
-        const [awardsData, photosData, videosData, newsData, blogsData] = await Promise.all([
-          getAwards(),
-          getGalleryItems(),
-          getVideos(),
-          getNewsArticles(),
-          getBlogs()
-        ]);
-
-        // Process awards data to add icons
-        const processedAwards = awardsData.map(award => ({
-          ...award,
-          icon: getAwardIcon(award.title)
-        }));
-
-        setAwards(processedAwards);
-        setPhotos(photosData);
-        setVideos(videosData);
-        setNewsItems(newsData);
-        setBlogs(blogsData);
-      } catch (err) {
-        console.error('Error loading gallery data:', err);
-        setError('Failed to load gallery content. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
+  // Process awards data to add icons
+  const awards = awardsData.map(award => ({
+    ...award,
+    icon: getAwardIcon(award.title)
+  }));
 
   // Function to determine award icon based on title
   const getAwardIcon = (title) => {

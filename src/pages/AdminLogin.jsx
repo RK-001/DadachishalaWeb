@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -38,7 +39,13 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <>
+      <SEO
+        title="Admin Login - Dada Chi Shala"
+        description="Admin login portal for Dada Chi Shala management"
+        noindex={true}
+      />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 bg-primary-600 rounded-full flex items-center justify-center">
@@ -141,7 +148,8 @@ const AdminLogin = () => {
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

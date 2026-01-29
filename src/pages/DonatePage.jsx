@@ -5,7 +5,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../services/firebase';
 import { initiatePayment, loadRazorpayScript } from '../services/razorpayService';
 import { emailService } from '../services/emailService';
+import { sanitizeString, sanitizeEmail } from '../utils/validators';
 import { Heart, Upload, Check, QrCode, Shield, CreditCard, Smartphone, Mail, Phone, MapPin, Globe, Copy, ExternalLink } from 'lucide-react';
+import SEO from '../components/SEO';
 
 // Static data outside component
 const DONATION_CATEGORIES = [
@@ -169,10 +171,10 @@ const DonatePage = () => {
     initiatePayment({
       amount: parseFloat(data.amount),
       donorInfo: {
-        name: `${data.firstName} ${data.lastName}`.trim(),
-        email: data.email,
-        phone: data.phoneno || '',
-        panNumber: data.panNumber?.toUpperCase() || '',
+        name: `${sanitizeString(data.firstName)} ${sanitizeString(data.lastName)}`.trim(),
+        email: sanitizeEmail(data.email),
+        phone: sanitizeString(data.phoneno || ''),
+        panNumber: sanitizeString(data.panNumber?.toUpperCase() || ''),
         message: `${selectedCategory} - ${selectedFrequency}`
       },
       donationType: selectedCategory,
@@ -203,11 +205,11 @@ const DonatePage = () => {
       const screenshotURL = await getDownloadURL(fileRef);
 
       const donationData = {
-        firstName: data.firstName?.trim(),
-        lastName: data.lastName?.trim(),
-        name: `${data.firstName} ${data.lastName}`.trim(),
-        email: data.email?.toLowerCase().trim(),
-        phoneno: data.phoneno?.trim() || '',
+        firstName: sanitizeString(data.firstName?.trim()),
+        lastName: sanitizeString(data.lastName?.trim()),
+        name: `${sanitizeString(data.firstName)} ${sanitizeString(data.lastName)}`.trim(),
+        email: sanitizeEmail(data.email?.toLowerCase().trim()),
+        phoneno: sanitizeString(data.phoneno?.trim() || ''),
         amount: parseFloat(data.amount),
         category: selectedCategory,
         frequency: selectedFrequency,
@@ -258,24 +260,46 @@ const DonatePage = () => {
     return <ThankYouScreen category={selectedCategory} paymentMethod={paymentMethod} onNewDonation={handleNewDonation} onHome={handleGoHome} />;
   }
 
-  return (
-    <div className="min-h-screen bg-primary-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16 relative overflow-hidden">
-        <div className="container-custom text-center relative z-10">
-          <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">Donate to illuminate young minds</h1>
-          <p className="text-xl text-primary-100 max-w-3xl mx-auto">Your contribution helps provide quality education to underprivileged children</p>
-        </div>
-      </section>
+  // Structured data for donation page
+  const donationSchema = {
+    "@context": "https://schema.org",
+    "@type": "DonateAction",
+    "recipient": {
+      "@type": "NGO",
+      "name": "Dada Chi Shala",
+      "url": "https://dadachishala.org"
+    },
+    "url": "https://dadachishala.org/donate",
+    "description": "Support free education for 450+ street children in Pune. Your donation helps provide school kits, medical checkups, skill development programs, and infrastructure for underprivileged kids."
+  };
 
-      {/* Main Section */}
-      <section className="py-12">
-        <div className="container-custom">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12">
+  return (
+    <>
+      <SEO
+        title="Donate to Dada Chi Shala - Support Street Children Education in Pune"
+        description="Support Dada Chi Shala in providing free education to 450+ street children across 10 branches in Pune. Your donation helps school kits, medical care, skill development. Tax exemption available. Donate via UPI, Online Payment."
+        keywords="donate to education NGO, support street children Pune, donation for underprivileged kids, charity Pune, NGO donation Maharashtra, help street children, education donation India, tax exemption donation"
+        canonicalUrl="/donate"
+        structuredData={donationSchema}
+        ogImage="/images/donate-og-image.jpg"
+      />
+      <div className="min-h-screen bg-primary-50">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16 relative overflow-hidden">
+          <div className="container-custom text-center relative z-10">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6">
+              <Heart className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">Donate to illuminate young minds</h1>
+            <p className="text-xl text-primary-100 max-w-3xl mx-auto">Your contribution helps provide quality education to underprivileged children</p>
+          </div>
+        </section>
+
+        {/* Main Section */}
+        <section className="py-12">
+          <div className="container-custom">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid lg:grid-cols-2 gap-12">
               
               {/* Left Side - Form */}
               <div className="space-y-8">
@@ -439,7 +463,8 @@ const DonatePage = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

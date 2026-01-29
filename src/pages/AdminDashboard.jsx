@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Users, Heart, Calendar, Image, BarChart3, MapPin, UserCheck, Star, PenTool } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
@@ -10,11 +10,15 @@ import TeamManagement from '../components/TeamManagement';
 import StoriesTestimonialsManagement from '../components/StoriesTestimonialsManagement';
 import BlogManagement from '../components/BlogManagement';
 import DonationManagement from '../components/DonationManagement';
-import { getEvents, getGalleryItems, getVolunteers } from '../services/databaseService';
+import SEO from '../components/SEO';
+import { useEvents, useGalleryItems, useVolunteers } from '../hooks/useFirebaseQueries';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('team');
-  const [statsLoading, setStatsLoading] = useState(true);
+  // React Query hooks for real-time stats
+  const { data: events = [] } = useEvents();
+  const { data: galleryItems = [] } = useGalleryItems();
+  const { data: volunteers = [] } = useVolunteers();
   const { logout } = useAuth();
 
   const handleLogout = async () => {
@@ -64,7 +68,13 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <>
+      <SEO
+        title="Admin Dashboard - Dada Chi Shala"
+        description="Admin dashboard for Dada Chi Shala management"
+        noindex={true}
+      />
+      <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <div className="w-64 bg-white shadow-lg min-h-screen flex-shrink-0">
@@ -108,7 +118,8 @@ const AdminDashboard = () => {
           {renderContent()}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

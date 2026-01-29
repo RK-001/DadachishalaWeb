@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Users, BookOpen, Home, Award, ArrowRight, MessageCircle } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
+import SEO from '../components/SEO';
 
 // Static constants moved outside the component for performance
 const IMPACT_STATS = [
@@ -117,8 +118,28 @@ const AboutPage = () => {
 
   useEffect(() => { loadTestimonials(); }, [loadTestimonials]);
 
+  const aboutSchema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "mainEntity": {
+      "@type": "NGO",
+      "name": "Dada Chi Shala",
+      "description": "Dada Chi Shala is a Pune-based NGO educating street children through 10 branches",
+      "foundingDate": "2010",
+      "numberOfEmployees": "250+ volunteers"
+    }
+  };
+
   return (
-    <div className="min-h-screen">
+    <>
+      <SEO
+        title="About Dada Chi Shala - Our Mission, Vision & Impact in Pune | NGO"
+        description="Learn about Dada Chi Shala's 15+ year journey educating street children in Pune. Our 10 branches serve 450+ children, mainstreamed 524+ students into schools. Meet our team and discover our mission."
+        keywords="about Dadachishala, NGO mission Pune, street children education mission, our story, founder Dada Chi Shala, team members, volunteer opportunities"
+        canonicalUrl="/about"
+        structuredData={aboutSchema}
+      />
+      <div className="min-h-screen">
 
       {/* Hero / Intro Section - About */}
       <div className="section-padding bg-gray-50">
@@ -199,7 +220,7 @@ const AboutPage = () => {
             </div>
 
             <div className="text-center mt-12">
-              <p className="text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">Because a child holding a book will never need to hold a begging bowl. Because education is the only real exit from poverty. Because the streets deserve classrooms too. ✨ We are building futures — one child at a time. 👉 Join us as a Volunteer or Donor & become part of this change.</p>
+              <p className="text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">Because a child holding a book will never need to hold a begging bowl. Because education is the only real exit from poverty. Because the streets deserve classrooms too.We are building futures — one child at a time.Join us as a Volunteer or Donor & become part of this change.</p>
             </div>
           </div>
         </div>
@@ -307,8 +328,9 @@ const AboutPage = () => {
       </div>
 
 
-    </div>
+      </div>
+    </>
   );
 };
 
-export default AboutPage;
+export default memo(AboutPage);

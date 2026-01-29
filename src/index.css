@@ -56,10 +56,19 @@
 @layer base {
   * {
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
   
   html {
     overflow-x: hidden;
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+  
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
   }
   
   body {
@@ -70,15 +79,27 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  
   #root {
     overflow-x: hidden;
     max-width: 100vw;
   }
+  
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', system-ui, sans-serif;
     @apply text-primary-900;
+    line-height: 1.2;
   }
+  
+  h1 { @apply text-3xl sm:text-4xl lg:text-5xl font-bold; }
+  h2 { @apply text-2xl sm:text-3xl lg:text-4xl font-bold; }
+  h3 { @apply text-xl sm:text-2xl lg:text-3xl font-semibold; }
+  h4 { @apply text-lg sm:text-xl lg:text-2xl font-semibold; }
+  h5 { @apply text-base sm:text-lg lg:text-xl font-medium; }
+  h6 { @apply text-sm sm:text-base lg:text-lg font-medium; }
 }
 
 @layer components {
@@ -133,11 +154,19 @@
   }
   
   .section-padding {
-    @apply px-4 sm:px-6 lg:px-8 py-12 lg:py-16;
+    @apply px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16;
   }
   
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+  }
+  
+  .container-tight {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full;
+  }
+  
+  .container-full {
+    @apply w-full px-4 sm:px-6 lg:px-8;
   }
   
   /* NGO Specific Components */
@@ -167,7 +196,62 @@
   
   /* Typography Classes */
   .heading-xl {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-primary-900;
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-primary-900;
+  }
+  
+  .heading-lg {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary-900;
+  }
+  
+  .heading-md {
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-primary-900;
+  }
+  
+  /* Mobile-first responsive utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile menu animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  /* Smooth scroll snap for carousels on mobile */
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scroll-snap-center {
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
   
   .heading-lg {

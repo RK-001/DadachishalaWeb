@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { 
   Heart, 
   Users, 
@@ -19,9 +20,10 @@ import {
   ChevronLeft,
   CheckCircle
 } from 'lucide-react';
-import { addVolunteer } from '../services/databaseService';
+import { addVolunteer } from '../services/cachedDatabaseService';
 import { functions } from '../services/firebase';
 import { httpsCallable } from 'firebase/functions';
+import { sanitizeString, sanitizeEmail } from '../utils/validators';
 
 const VolunteerPage = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -172,29 +174,29 @@ const VolunteerPage = () => {
       // Prepare data for Firebase
       const volunteerData = {
         personal_info: {
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
+          full_name: sanitizeString(formData.fullName),
+          email: sanitizeEmail(formData.email),
+          phone: sanitizeString(formData.phone),
           age: formData.age || null,
-          occupation: formData.occupation || '',
+          occupation: sanitizeString(formData.occupation || ''),
         },
         skills_and_interests: {
           skills: formData.skills,
-          other_interests: formData.interests || '',
+          other_interests: sanitizeString(formData.interests || ''),
           preferred_branches: formData.preferredBranches,
         },
         availability: {
-          when_available: formData.availability,
-          time_commitment: formData.timeCommitment,
+          when_available: sanitizeString(formData.availability),
+          time_commitment: sanitizeString(formData.timeCommitment),
         },
         experience_and_motivation: {
-          previous_experience: formData.previousExperience || '',
-          why_volunteer: formData.whyVolunteer,
+          previous_experience: sanitizeString(formData.previousExperience || ''),
+          why_volunteer: sanitizeString(formData.whyVolunteer),
         },
         references_and_emergency: {
-          references: formData.references || '',
-          emergency_contact_name: formData.emergencyContact,
-          emergency_contact_phone: formData.emergencyPhone,
+          references: sanitizeString(formData.references || ''),
+          emergency_contact_name: sanitizeString(formData.emergencyContact),
+          emergency_contact_phone: sanitizeString(formData.emergencyPhone),
         },
         application_status: 'pending',
         submitted_at: new Date().toISOString(),
@@ -351,8 +353,36 @@ const VolunteerPage = () => {
     }
   ];
 
+  const volunteerSchema = {
+    "@context": "https://schema.org",
+    "@type": "VolunteerAction",
+    "organizer": {
+      "@type": "NGO",
+      "name": "Dada Chi Shala",
+      "url": "https://dadachishala.org"
+    },
+    "location": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Pune",
+        "addressRegion": "Maharashtra",
+        "addressCountry": "IN"
+      }
+    },
+    "description": "Join 250+ volunteers teaching street children in Pune"
+  };
+
   return (
-    <div className="overflow-hidden">
+    <>
+      <SEO
+        title="Volunteer with Dada Chi Shala - Help Street Children in Pune"
+        description="Join 250+ volunteers making a difference! Volunteer with Dada Chi Shala teaching street children across 10 branches in Pune. Teaching, healthcare, skill development opportunities available."
+        keywords="volunteer Pune, volunteer with children NGO, teaching opportunities Pune, social work volunteering, volunteer street children education, NGO volunteer Maharashtra"
+        canonicalUrl="/volunteer"
+        structuredData={volunteerSchema}
+      />
+      <div className="overflow-hidden">
       {/* Hero Section */}
       <section className="relative py-24 bg-gradient-to-r from-primary-900 to-primary-700">
         <div className="absolute inset-0">
@@ -949,7 +979,8 @@ const VolunteerPage = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 
