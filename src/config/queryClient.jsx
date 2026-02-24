@@ -10,18 +10,20 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Cache configuration
-      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh
-      gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection (formerly cacheTime)
-      
+      // staleTime: per-query (set individually in hooks based on data volatility)
+      staleTime: 30 * 1000, // 30 seconds default
+      // gcTime: how long unused cache entries stay in memory before GC
+      gcTime: 10 * 60 * 1000, // 10 minutes
+
       // Retry configuration
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      
+
       // Refetch configuration
-      refetchOnWindowFocus: false, // Don't refetch on window focus (reduces calls)
-      refetchOnReconnect: true, // Refetch when reconnecting
-      refetchOnMount: false, // Don't refetch on component mount if data exists
-      
+      refetchOnWindowFocus: true,  // ensures users see updates when they come back to the tab
+      refetchOnReconnect: true,    // re-sync after network loss
+      refetchOnMount: true,        // fetch fresh data on component mount
+
       // Error handling
       throwOnError: false,
     },

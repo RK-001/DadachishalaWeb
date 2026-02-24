@@ -1,287 +1,236 @@
 # Dada Chi Shala Website
 
-A comprehensive NGO website built with React, Vite, and Firebase for Dada Chi Shala - a Pune-based NGO providing free quality education to street and underprivileged children.
+A modern, full-featured NGO website for **Educare (Dada Chi Shala) Education Trust** — a Pune-based organization providing free quality education to street and underprivileged children across Maharashtra.
+
+Built with React 18, Vite, Tailwind CSS, and Firebase.
+
+---
 
 ## Features
 
-### Public Features
-- **Home Page**: Hero section, impact counters, mission & vision, upcoming events, founder's message
-- **Gallery**: Responsive image grid with modal view
-- **Events**: Event listing with details
-- **Donate**: Secure donation form with QR code payment and receipt generation
-- **Volunteer**: Volunteer registration and management
-- **Contact**: Contact information and communication channels
-- **Media**: News articles, YouTube videos, and achievements
+### Public Pages
+| Page | Description |
+|------|-------------|
+| **Home** | Hero slider, animated impact counters, events carousel, success stories, testimonials, awards |
+| **About** | Origin story, vision & mission, focus areas, impact stats |
+| **Branches** | Branch locations with hero slider and details panel |
+| **Team** | Founders, core team, volunteers with social links |
+| **Gallery** | Photo gallery, video gallery, blogs, awards — with lightbox modals |
+| **Events** | Event listing with status badges, date/time, location, Google Maps links |
+| **Donate** | Razorpay online payment + manual bank transfer with QR code & receipt upload |
+| **Volunteer** | Multi-step registration form (4 steps) with email confirmation |
+| **Contact** | Contact form (EmailJS), contact info cards, Google Maps embed |
+| **Media** | News/press coverage, video embeds, awards & recognitions |
 
-### Admin Features
-- **Admin Authentication**: Secure login system
-- **Admin Dashboard**: Comprehensive management interface
-- **Volunteer Management**: Approve/reject volunteer applications
-- **Donation Management**: Verify donations and generate receipts
-- **Event Management**: Create, edit, and delete events
-- **Gallery Management**: Upload and manage gallery images
+### Admin Dashboard
+- Secure Firebase Auth login (`/admin`)
+- **Responsive sidebar** with mobile hamburger toggle
+- Management panels for: Events, Gallery, Blogs, Branches, Team, Stories/Testimonials, Volunteers, Donations
 
-## Technology Stack
+### Technical Features
+- **Code splitting** — React.lazy + Suspense for all page routes
+- **Error boundary** — graceful error handling with retry
+- **Scroll-to-top** on route changes
+- **404 page** with helpful navigation links
+- **Maintenance mode** — toggled via Firebase Realtime Database
+- **SEO** — per-page meta tags and JSON-LD structured data via react-helmet-async
+- **Caching** — dual-layer (memory + localStorage) cache wrapping Firebase calls
+- **React Query** — centralized data fetching with 5-min stale time
+- **Input sanitization** — XSS prevention on all user inputs
+- **Responsive design** — mobile-first with Tailwind CSS
 
-### Frontend
-- **React 18** with functional components and hooks
-- **Vite** for fast development and optimized builds
-- **Tailwind CSS** for responsive design and styling
-- **React Router DOM** for client-side routing
-- **React Hook Form** for form handling and validation
-- **Lucide React** for consistent iconography
+---
 
-### Backend & Services
-- **Firebase Firestore** for database
-- **Firebase Authentication** for admin login
-- **Firebase Storage** for file uploads
-- **EmailJS** for email automation
-- **jsPDF** for PDF receipt generation
+## Tech Stack
 
-### Development Tools
-- **ESLint** for code linting
-- **PostCSS** and **Autoprefixer** for CSS processing
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 18.2 + Vite 7 |
+| Styling | Tailwind CSS 3.3 |
+| Routing | react-router-dom 6.15 (v7 future flags) |
+| State/Data | @tanstack/react-query 5, React Context |
+| Forms | react-hook-form + @hookform/resolvers + yup |
+| Animation | framer-motion |
+| Icons | lucide-react |
+| Database | Firebase Firestore |
+| Auth | Firebase Authentication (email/password) |
+| Storage | Firebase Storage |
+| Realtime | Firebase Realtime Database (maintenance mode) |
+| Cloud Functions | Firebase Functions (Razorpay, emails) |
+| Analytics | Firebase Analytics |
+| Payments | Razorpay |
+| Email | emailjs-com (client-side) + Firebase Functions (server-side) |
+| SEO | react-helmet-async |
+
+---
 
 ## Project Structure
 
 ```
-dadachishala-website/
-├── src/
-│   ├── components/          # Reusable components
-│   │   ├── Navbar.jsx      # Responsive navigation
-│   │   ├── Footer.jsx      # Site footer
-│   │   ├── EventCard.jsx   # Event display component
-│   │   ├── GalleryGrid.jsx # Image gallery with modal
-│   │   └── ProtectedRoute.jsx # Admin route protection
-│   ├── pages/              # All page components
-│   │   ├── HomePage.jsx    # Main landing page
-│   │   ├── DonatePage.jsx  # Donation form with QR code
-│   │   ├── GalleryPage.jsx # Photo gallery
-│   │   ├── EventsPage.jsx  # Events listing
-│   │   ├── AdminLogin.jsx  # Admin authentication
-│   │   ├── AdminDashboard.jsx # Admin panel
-│   │   └── [Other pages]
-│   ├── context/
-│   │   └── AuthContext.jsx # Authentication state management
-│   ├── services/
-│   │   ├── firebase.js     # Firebase configuration
-│   │   ├── email.js        # EmailJS integration
-│   │   └── pdf.js          # PDF receipt generation
-│   └── utils/              # Helper functions
-├── Configuration files (Vite, Tailwind, etc.)
-└── Documentation
+src/
+├── App.jsx                    # Root: routing, providers, maintenance mode
+├── main.jsx                   # Entry point: React DOM render
+├── index.css                  # Tailwind + custom animations & utilities
+│
+├── pages/                     # Route-level components (lazy-loaded)
+│   ├── HomePage.jsx           # Hero, counters, events, stories, awards
+│   ├── AboutPage.jsx          # Mission, vision, impact stats
+│   ├── BranchesPage.jsx       # Branch cards + hero slider
+│   ├── TeamPage.jsx           # Team members grid
+│   ├── GalleryPage.jsx        # Photos, videos, blogs, awards
+│   ├── EventsPage.jsx         # Events list with React Query
+│   ├── DonatePage.jsx         # Razorpay + manual payment
+│   ├── VolunteerPage.jsx      # 4-step registration form
+│   ├── ContactPage.jsx        # Contact form + map
+│   ├── MediaPage.jsx          # News, videos, awards
+│   ├── AdminLogin.jsx         # Firebase Auth login
+│   ├── AdminDashboard.jsx     # Admin panel with sidebar
+│   ├── MaintenancePage.jsx    # Maintenance mode screen
+│   └── NotFoundPage.jsx       # 404 error page
+│
+├── components/                # Shared UI components
+│   ├── Navbar.jsx             # Responsive nav with mobile menu
+│   ├── Footer.jsx             # Site footer with links & social
+│   ├── ErrorBoundary.jsx      # React error boundary
+│   ├── ScrollToTop.jsx        # Scroll restoration on navigation
+│   ├── SEO.jsx                # Helmet meta tags + JSON-LD
+│   ├── ProtectedRoute.jsx     # Auth guard for admin routes
+│   ├── AnimatedCounter.jsx    # Number counting animation
+│   ├── Card.jsx               # Reusable card component
+│   ├── EventCard.jsx          # Event display card
+│   ├── common/                # Button, FormInput, Modal, LoadingSpinner
+│   ├── gallery/               # GalleryFormModal, GalleryItemCard
+│   ├── stories/               # StoryTestimonialCard, StoryTestimonialFormModal
+│   └── team/                  # TeamMemberCard, TeamMemberFormModal
+│
+├── services/                  # External service integrations
+│   ├── firebase.js            # Firebase app init + service exports
+│   ├── cachedDatabaseService.js # CRUD operations with cache layer
+│   ├── cacheService.js        # Dual-layer cache (memory + localStorage)
+│   ├── razorpayService.js     # Razorpay payment integration
+│   ├── emailService.js        # EmailJS client-side emails
+│   └── imageUploadService.js  # Firebase Storage uploads
+│
+├── hooks/                     # Custom React hooks
+│   ├── useFirebaseQueries.js  # React Query hooks for all collections
+│   ├── useCRUD.js             # Generic CRUD mutation hooks
+│   └── useFirestore.js        # Low-level Firestore hook
+│
+├── context/                   # React Context providers
+│   ├── AuthContext.jsx        # Firebase Auth state
+│   └── NotificationContext.jsx # Toast notifications
+│
+├── config/
+│   ├── colors.js              # Color system configuration
+│   └── queryClient.jsx        # React Query client config
+│
+└── utils/
+    ├── sanitization.js        # XSS prevention (sanitizeString, sanitizeUrl, etc.)
+    ├── validators.js          # Form validation + re-exports from sanitization
+    ├── helpers.js             # formatDate, formatCurrency, truncateText, etc.
+    ├── formatters.js          # Additional formatting utilities
+    ├── colorUtils.js          # Color manipulation
+    ├── logger.js              # Logging utility
+    └── adminSetup.js          # Admin account setup
 ```
-
-## Setup Instructions
-
-Install Dependencies
-npm install
-
-Setup Firebase
-
-Create a Firebase project
-Enable Firestore, Authentication, and Storage
-Update src/services/firebase.js with your config
-Setup EmailJS (for volunteer emails)
-
-Create EmailJS account (Used rkorade.01@gmail.com)
-Update src/services/email.js with your credentials
-Start Development
-
-npm run dev
-
-Configure Database
-
-Create Firestore collections: events, donors, contact, branches
-Add sample data as per the schema in README.md
-📋 Database Schema Ready
-The project is configured to work with your existing Firebase collections:
-
-branches - Branch information
-events - Event management
-donors - Donation tracking
-contact - Volunteer data
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Firebase project (for backend services)
-- EmailJS account (for email services)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd dadachishala-website
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Firebase Configuration**
-   - Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
-   - Enable Firestore Database
-   - Enable Authentication (Email/Password)
-   - Enable Storage
-   - Copy your Firebase configuration
-   - Update `src/services/firebase.js` with your Firebase config
-
-4. **EmailJS Configuration**
-   - Create an account at [https://www.emailjs.com/](https://www.emailjs.com/)
-   - Create an email service and template
-   - Update `src/services/email.js` with your EmailJS credentials
-
-5. **Environment Setup**
-   Create a `.env` file in the root directory:
-   ```env
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_EMAILJS_USER_ID=your_emailjs_user_id
-   VITE_EMAILJS_SERVICE_ID=your_service_id
-   VITE_EMAILJS_TEMPLATE_ID=your_template_id
-   ```
-
-6. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-### Firebase Database Structure
-
-The application expects the following Firestore collections:
-
-#### branches
-```javascript
-{
-  branch_name: "string",
-  description: "string", 
-  imageURL: "string",
-  location: "string"
-}
-```
-
-#### events
-```javascript
-{
-  event_name: "string",
-  description: "string",
-  event_date: "timestamp",
-  location: "string",
-  imageURL: "string" // optional
-}
-```
-
-#### donors
-```javascript
-{
-  firstName: "string",
-  lastName: "string",
-  middleName: "string", // optional
-  email: "string", // optional
-  phoneno: "string",
-  amount: "number",
-  screenshotURL: "string",
-  status: "pending" | "verified",
-  createdAt: "timestamp",
-  text_area: "string" // optional notes
-}
-```
-
-#### contact (volunteer data)
-```javascript
-{
-  first_name: "string",
-  last_name: "string",
-  email: "string",
-  phoneno: "string",
-  age: "number",
-  skills: "string",
-  availability: "string",
-  status: "pending" | "approved" | "rejected",
-  createdAt: "timestamp",
-  text_area: "string" // optional notes
-}
-```
-
-### Build and Deployment
-
-1. **Build for production**
-   ```bash
-   npm run build
-   ```
-
-2. **Preview production build**
-   ```bash
-   npm run preview
-   ```
-
-3. **Deploy to Firebase Hosting**
-   ```bash
-   npm install -g firebase-tools
-   firebase login
-   firebase init hosting
-   firebase deploy
-   ```
-
-## Features Implementation Status
-
-### ✅ Completed
-- Project setup with Vite and React
-- Tailwind CSS configuration
-- Firebase integration setup
-- Basic routing structure
-- Responsive navigation and footer
-- Home page with hero section and event display
-- Admin authentication system
-- Basic admin dashboard structure
-- Donation form with file upload
-- Gallery page with modal view
-- Event listing page
-
-### 🚧 In Progress / To Be Implemented
-- Complete volunteer registration form
-- Full admin dashboard functionality
-- Email automation integration
-- PDF receipt generation
-- Complete contact page
-- About page content
-- Media page with YouTube integration
-- Advanced admin features (analytics, reporting)
-- SEO optimization
-- Performance optimization
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -am 'Add new feature'`)
-4. Push to the branch (`git push origin feature/new-feature`)
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Support
-
-For technical support or questions:
-- Create an issue in the GitHub repository
-- Contact the development team
-
-## Acknowledgments
-
-- **Dada Chi Shala** team for their mission and requirements
-- **React** and **Firebase** communities for excellent documentation
-- **Tailwind CSS** for the utility-first CSS framework
-- **Lucide** for beautiful icons
 
 ---
 
-**Note**: Remember to update Firebase configuration, EmailJS settings, and other service credentials before deploying to production.
+## Setup
+
+### Prerequisites
+- Node.js v20.19+ or v22.12+
+- Firebase project
+- EmailJS account (optional, for contact form)
+- Razorpay account (optional, for online payments)
+
+### Installation
+
+```bash
+# Clone and install
+git clone <repository-url>
+cd dadachishala-website
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Firebase
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_DATABASE_URL=your_rtdb_url
+
+# EmailJS
+VITE_EMAILJS_SERVICE_ID=your_service_id
+VITE_EMAILJS_TEMPLATE_ID=your_template_id
+VITE_EMAILJS_USER_ID=your_user_id
+
+# Razorpay
+VITE_RAZORPAY_KEY_ID=your_razorpay_key
+```
+
+### Firebase Setup
+
+1. Create a project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable **Firestore Database**
+3. Enable **Authentication** (Email/Password provider)
+4. Enable **Storage**
+5. Enable **Realtime Database** (for maintenance mode flag)
+6. Deploy Cloud Functions from the `functions/` directory
+
+### Running
+
+```bash
+# Development
+npm run dev
+
+# Production build
+npm run build
+
+# Deploy to Vercel
+vercel deploy
+```
+
+---
+
+## Firestore Collections
+
+| Collection | Key Fields |
+|-----------|------------|
+| `events` | event_name, description, event_date, location, imageURL, status |
+| `branches` | branch_name, description, imageURL, location |
+| `gallery` | title, imageURL, category, description |
+| `successStories` | name, story, imageURL |
+| `testimonials` | name, testimonial, role, imageURL |
+| `blogs` | title, content, imageURL, category, createdAt |
+| `awards` | title, description, imageURL, year |
+| `news` | title, source, imageURL, publishedAt |
+| `videos` | title, youtubeUrl, description |
+| `donors` | firstName, lastName, email, phoneno, amount, status, screenshotURL |
+| `contact` | first_name, last_name, email, phoneno, skills, availability, status |
+| `teamMembers` | name, role, bio, imageURL, socialLinks |
+
+---
+
+## Deployment
+
+### Vercel (configured)
+The project includes `vercel.json` with SPA rewrites. Push to your Git repo and connect to Vercel.
+
+### Firebase Hosting
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy
+```
+
+---
+

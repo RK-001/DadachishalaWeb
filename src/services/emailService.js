@@ -1,7 +1,7 @@
 // Email service for sending notifications to volunteers
 // Using EmailJS for client-side email sending
 
-import emailjs from 'emailjs-com';
+import emailjs from '@emailjs/browser';
 
 class EmailService {
   constructor() {

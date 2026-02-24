@@ -12,10 +12,10 @@ const SOCIAL_LINKS = [
 
 const QUICK_LINKS = [
   { to: '/about', label: 'About Us' },
-  { to: '/programs', label: 'Our Programs' },
+  { to: '/branches', label: 'Our Branches' },
   { to: '/gallery', label: 'Gallery' },
   { to: '/events', label: 'Events' },
-  { to: '/success-stories', label: 'Success Stories' }
+  { to: '/team', label: 'Our Team' }
 ];
 
 const INVOLVE_LINKS = [
@@ -30,9 +30,9 @@ const CONTACT_INFO = [
 ];
 
 const FOOTER_LINKS = [
-  { to: '/privacy', label: 'Privacy Policy' },
-  { to: '/terms', label: 'Terms of Service' },
-  { to: '/contact', label: 'Contact' }
+  { to: '/contact', label: 'Contact Us' },
+  { to: '/volunteer', label: 'Volunteer' },
+  { to: '/media', label: 'Media' }
 ];
 
 const SocialButton = memo(({ href, label, Icon }) => {
@@ -115,7 +115,7 @@ const Footer = () => {
         {/* Bottom Footer */}
         <div className="border-t border-gray-700/50 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <p className="text-gray-400 text-sm">© 2025 Educare (Dada Chi Shala). All rights reserved.</p>
+            <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Educare (Dada Chi Shala). All rights reserved.</p>
             <div className="flex gap-4">
               {FOOTER_LINKS.map(l => (
                 <Link key={l.to} to={l.to} className="text-gray-400 hover:text-primary-400 text-sm transition-colors">

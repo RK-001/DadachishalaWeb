@@ -20,6 +20,7 @@ export const QUERY_KEYS = {
   awards: 'awards',
   news: 'news',
   videos: 'videos',
+  team: 'team',
   volunteers: 'volunteers',
   donations: 'donations',
   donation: 'donation',
@@ -34,7 +35,7 @@ export const useEvents = (limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.events, limitCount],
     queryFn: () => cachedDb.getEvents(limitCount),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 1000, // 1 minute
   });
 };
 
@@ -42,7 +43,7 @@ export const useUpcomingEvents = (limitCount = 3) => {
   return useQuery({
     queryKey: [QUERY_KEYS.upcomingEvents, limitCount],
     queryFn: () => cachedDb.getUpcomingEvents(limitCount),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 1000, // 1 minute
   });
 };
 
@@ -90,7 +91,7 @@ export const useGalleryItems = (category = null, limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.gallery, category, limitCount],
     queryFn: () => cachedDb.getGalleryItems(category, limitCount),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -135,7 +136,7 @@ export const useSuccessStories = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.successStories],
     queryFn: cachedDb.getSuccessStories,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -180,7 +181,7 @@ export const useTestimonials = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.testimonials],
     queryFn: cachedDb.getTestimonials,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -225,7 +226,7 @@ export const useBlogs = (authorType = null, limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.blogs, authorType, limitCount],
     queryFn: () => cachedDb.getBlogs(authorType, limitCount),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -234,7 +235,7 @@ export const useBlog = (blogId) => {
     queryKey: [QUERY_KEYS.blog, blogId],
     queryFn: () => cachedDb.getBlogById(blogId),
     enabled: !!blogId, // Only run if blogId exists
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -280,7 +281,7 @@ export const useBranches = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.branches],
     queryFn: cachedDb.getBranches,
-    staleTime: 60 * 60 * 1000, // 1 hour (rarely changes)
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -289,7 +290,7 @@ export const useBranch = (branchId) => {
     queryKey: [QUERY_KEYS.branch, branchId],
     queryFn: () => cachedDb.getBranchById(branchId),
     enabled: !!branchId,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -335,7 +336,7 @@ export const useAwards = (limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.awards, limitCount],
     queryFn: () => cachedDb.getAwards(limitCount),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -380,7 +381,7 @@ export const useNews = (limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.news, limitCount],
     queryFn: () => cachedDb.getNewsArticles(limitCount),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -425,7 +426,7 @@ export const useVideos = (limitCount = null) => {
   return useQuery({
     queryKey: [QUERY_KEYS.videos, limitCount],
     queryFn: () => cachedDb.getVideos(limitCount),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
@@ -556,6 +557,48 @@ export const useUpdateDonationStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.donations] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.donationStats] });
+    },
+  });
+};
+
+// ================================
+// TEAM HOOKS
+// ================================
+
+export const useTeamMembers = () => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.team],
+    queryFn: cachedDb.getTeamMembers,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useAddTeamMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cachedDb.addTeamMember,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.team] });
+    },
+  });
+};
+
+export const useUpdateTeamMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ memberId, updateData }) => cachedDb.updateTeamMember(memberId, updateData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.team] });
+    },
+  });
+};
+
+export const useDeleteTeamMember = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: cachedDb.deleteTeamMember,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.team] });
     },
   });
 };

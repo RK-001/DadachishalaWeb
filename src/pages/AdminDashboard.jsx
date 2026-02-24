@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Users, Heart, Calendar, Image, BarChart3, MapPin, UserCheck, Star, PenTool } from 'lucide-react';
+import { LogOut, Users, Heart, Calendar, Image, MapPin, UserCheck, Star, PenTool, Menu, X } from 'lucide-react';
 import AnimatedCounter from '../components/AnimatedCounter';
 import EventManagement from '../components/EventManagement';
 import GalleryManagement from '../components/GalleryManagement';
@@ -15,6 +15,7 @@ import { useEvents, useGalleryItems, useVolunteers } from '../hooks/useFirebaseQ
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('team');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   // React Query hooks for real-time stats
   const { data: events = [] } = useEvents();
   const { data: galleryItems = [] } = useGalleryItems();
@@ -76,19 +77,33 @@ const AdminDashboard = () => {
       />
       <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       <div className="flex min-h-screen">
+        {/* Mobile Sidebar Toggle */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="lg:hidden fixed top-20 left-4 z-50 p-2 bg-white shadow-lg rounded-lg"
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+
+        {/* Sidebar Overlay (mobile) */}
+        {sidebarOpen && (
+          <div className="lg:hidden fixed inset-0 bg-black/30 z-40" onClick={() => setSidebarOpen(false)} />
+        )}
+
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-lg min-h-screen flex-shrink-0">
+        <div className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white shadow-lg flex flex-col flex-shrink-0 transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="p-6">
             <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
           </div>
           
-          <nav className="mt-6">
+          <nav className="mt-6 flex-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
                   className={`w-full flex items-center px-6 py-3 text-left transition-colors ${
                     activeTab === tab.id
                       ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
@@ -102,7 +117,7 @@ const AdminDashboard = () => {
             })}
           </nav>
 
-          <div className="absolute bottom-6 left-6">
+          <div className="p-6 border-t border-gray-200">
             <button
               onClick={handleLogout}
               className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
@@ -114,7 +129,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-8 overflow-x-hidden max-w-full">
+        <div className="flex-1 p-4 lg:p-8 overflow-x-hidden max-w-full">
           {renderContent()}
         </div>
       </div>

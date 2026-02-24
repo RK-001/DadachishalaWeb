@@ -43,40 +43,5 @@ export const validateImageFile = (file) => {
   return validateFileType(file, allowedTypes) && validateFileSize(file, maxSizeInMB);
 };
 
-// Sanitization utilities
-export const sanitizeString = (str) => {
-  if (!str) return '';
-  return String(str)
-    .trim()
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, ''); // Remove inline event handlers
-};
-
-export const sanitizeEmail = (email) => {
-  if (!email) return '';
-  return String(email)
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w@.-]/g, ''); // Keep only valid email characters
-};
-
-export const sanitizePhone = (phone) => {
-  if (!phone) return '';
-  return String(phone).replace(/\D/g, ''); // Keep only digits
-};
-
-export const sanitizeUrl = (url) => {
-  if (!url) return '';
-  try {
-    const urlObj = new URL(url);
-    // Only allow http and https protocols
-    if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
-      return urlObj.href;
-    }
-  } catch (e) {
-    return '';
-  }
-  return '';
-};
-
+// Re-export sanitization utilities from canonical module
+export { sanitizeString, sanitizeEmail, sanitizePhone, sanitizeUrl } from './sanitization';

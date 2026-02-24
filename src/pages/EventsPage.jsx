@@ -1,36 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import React from 'react';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import EventCard from '../components/EventCard';
 import SEO from '../components/SEO';
+import { useEvents } from '../hooks/useFirebaseQueries';
 
 const EventsPage = () => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const q = query(
-        collection(db, 'events'),
-        orderBy('event_date', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      const eventsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setEvents(eventsData);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: events = [], isLoading: loading } = useEvents();
 
   const eventsSchema = {
     "@context": "https://schema.org",

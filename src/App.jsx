@@ -1,25 +1,40 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import MaintenancePage from './pages/MaintenancePage'
-import HomePage from './pages/HomePage'
-import AboutPage from './pages/AboutPage'
-import BranchesPage from './pages/BranchesPage'
-import TeamPage from './pages/TeamPage'
-import GalleryPage from './pages/GalleryPage'
-import EventsPage from './pages/EventsPage'
-import DonatePage from './pages/DonatePage'
-import VolunteerPage from './pages/VolunteerPage'
-import ContactPage from './pages/ContactPage'
-import MediaPage from './pages/MediaPage'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import ProtectedRoute from './components/ProtectedRoute'
+import ScrollToTop from './components/ScrollToTop'
+import ErrorBoundary from './components/ErrorBoundary'
 import { rtdb } from './services/firebase'
 import { ref, onValue } from 'firebase/database'
+
+// Lazy-loaded pages for code splitting
+const HomePage = lazy(() => import('./pages/HomePage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const BranchesPage = lazy(() => import('./pages/BranchesPage'))
+const TeamPage = lazy(() => import('./pages/TeamPage'))
+const GalleryPage = lazy(() => import('./pages/GalleryPage'))
+const EventsPage = lazy(() => import('./pages/EventsPage'))
+const DonatePage = lazy(() => import('./pages/DonatePage'))
+const VolunteerPage = lazy(() => import('./pages/VolunteerPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const MediaPage = lazy(() => import('./pages/MediaPage'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
+import ProtectedRoute from './components/ProtectedRoute'
+
+// Page loading fallback
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="text-center">
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600 mb-4" />
+      <p className="text-gray-600 animate-pulse">Loading...</p>
+    </div>
+  </div>
+)
 
 function App() {
   const [maintenanceMode, setMaintenanceMode] = useState(false)
@@ -74,7 +89,11 @@ function App() {
   // Allow access to admin routes even in maintenance mode
   // This allows admins to log in and turn off maintenance mode
   if (maintenanceMode && import.meta.env.MODE === 'production') {
-    return <MaintenancePage />
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <MaintenancePage />
+      </Suspense>
+    )
   }
 
   return (
@@ -86,31 +105,37 @@ function App() {
             v7_relativeSplatPath: true
           }}
         >
+          <ScrollToTop />
           <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/branches" element={<BranchesPage />} />
-                <Route path="/team" element={<TeamPage />} />
-                <Route path="/gallery" element={<GalleryPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/donate" element={<DonatePage />} />
-                <Route path="/volunteer" element={<VolunteerPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/media" element={<MediaPage />} />
-                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route 
-                  path="/admin/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-              </Routes>
+              <ErrorBoundary>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/branches" element={<BranchesPage />} />
+                    <Route path="/team" element={<TeamPage />} />
+                    <Route path="/gallery" element={<GalleryPage />} />
+                    <Route path="/events" element={<EventsPage />} />
+                    <Route path="/donate" element={<DonatePage />} />
+                    <Route path="/volunteer" element={<VolunteerPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/media" element={<MediaPage />} />
+                    <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route 
+                      path="/admin/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </main>
             <Footer />
           </div>

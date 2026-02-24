@@ -45,12 +45,6 @@ const GalleryPage = () => {
   const loading = awardsLoading || photosLoading || videosLoading || newsLoading || blogsLoading;
   const error = awardsError || photosError || videosError || newsError || blogsError;
 
-  // Process awards data to add icons
-  const awards = awardsData.map(award => ({
-    ...award,
-    icon: getAwardIcon(award.title)
-  }));
-
   // Function to determine award icon based on title
   const getAwardIcon = (title) => {
     if (title.toLowerCase().includes('best') || title.toLowerCase().includes('top')) {
@@ -61,6 +55,12 @@ const GalleryPage = () => {
       return <Star className="w-6 h-6" />;
     }
   };
+
+  // Process awards data to add icons
+  const awards = awardsData.map(award => ({
+    ...award,
+    icon: getAwardIcon(award.title)
+  }));
 
   // Dynamic categories based on actual photo data
   const categories = [
