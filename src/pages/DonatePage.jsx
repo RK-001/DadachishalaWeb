@@ -290,7 +290,7 @@ const DonatePage = () => {
             <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-6">Donate to illuminate young minds</h1>
+            <h1 className="text-4xl md:text-5xl block text-white mb-6">Donate to illuminate young minds</h1>
             <p className="text-xl text-primary-100 max-w-3xl mx-auto">Your contribution helps provide quality education to underprivileged children</p>
           </div>
         </section>

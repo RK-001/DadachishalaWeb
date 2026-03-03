@@ -36,7 +36,7 @@ const EventsPage = () => {
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
         <div className="container-custom text-center">
           <Calendar className="w-16 h-16 mx-auto mb-6 text-secondary-400" />
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl block text-white mb-4">
             Our Events
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">

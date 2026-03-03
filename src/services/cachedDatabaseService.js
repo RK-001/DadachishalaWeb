@@ -686,6 +686,7 @@ export const updateVolunteerStatus = async (volunteerId, status, notes = '') => 
     const volunteerRef = doc(db, 'volunteers', volunteerId);
     await updateDoc(volunteerRef, {
       application_status: status,
+      status,                         // keep both fields in sync
       updated_at: serverTimestamp(),
       ...(notes && { status_notes: notes })
     });
@@ -849,8 +850,20 @@ export const getTeamMembers = async () => {
       ...doc.data()
     }));
   } catch (error) {
-    console.error('Error fetching team members:', error);
-    throw error;
+    console.warn('getTeamMembers: orderBy query failed, falling back to unordered fetch:', error.message);
+    // Fallback: fetch without ordering (handles missing index or missing 'order' field)
+    try {
+      const fallbackSnapshot = await getDocs(collection(db, 'team'));
+      const members = fallbackSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // Sort client-side if 'order' field exists on documents
+      return members.sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+    } catch (fallbackError) {
+      console.error('Error fetching team members (fallback):', fallbackError);
+      throw fallbackError;
+    }
   }
 };
 

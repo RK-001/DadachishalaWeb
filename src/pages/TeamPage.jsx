@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { useTeamMembers } from '../hooks/useFirebaseQueries';
 import { 
   Users, 
   Heart, 
@@ -14,41 +15,13 @@ import {
 } from 'lucide-react';
 
 const TeamPage = () => {
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: teamMembers = [], isLoading: loading, isError, error } = useTeamMembers();
 
-  // Load team members from localStorage (in real app, this would be from database)
-  useEffect(() => {
-    const loadTeamMembers = () => {
-      try {
-        const savedMembers = localStorage.getItem('teamMembers');
-        if (savedMembers) {
-          const members = JSON.parse(savedMembers);
-          // Filter only active members
-          const activeMembers = members.filter(member => member.status === 'active');
-          setTeamMembers(activeMembers);
-        }
-      } catch (error) {
-        console.error('Error loading team members:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTeamMembers();
-  }, []);
-
-  // Filter members by category
-  const founders = teamMembers.filter(member => member.category === 'founder');
-  const coreTeam = teamMembers.filter(member => member.category === 'core-team');
-  const volunteers = teamMembers.filter(member => member.category === 'volunteer');
-
-  const teamStats = [
-    { value: founders.length + coreTeam.length, label: "Core Team Members", suffix: "" },
-    { value: volunteers.length, label: "Active Volunteers", suffix: "+" },
-    { value: 15, label: "Years of Experience", suffix: "+" },
-    { value: 50, label: "Countries Represented", suffix: "+" }
-  ];
+  // Filter members by category (only active members)
+  const activeMembers = teamMembers.filter(member => member.status === 'active');
+  const founders = activeMembers.filter(member => member.category === 'founder');
+  const coreTeam = activeMembers.filter(member => member.category === 'core-team');
+  const volunteers = activeMembers.filter(member => member.category === 'volunteer');
 
   const SocialIcon = ({ platform, url }) => {
     const handleClick = () => {
@@ -112,6 +85,20 @@ const TeamPage = () => {
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Loading team members...</p>
+          </div>
+        </div>
+      ) : isError ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <Users className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-700 mb-2">Failed to load team data</h2>
+            <p className="text-gray-500 mb-4">{error?.message || 'An unexpected error occurred.'}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         </div>
       ) : (

@@ -46,6 +46,25 @@ class EmailService {
     }
   }
 
+  async sendCustomEmail(recipientEmail, subject, message) {
+    try {
+      const emailTemplate = {
+        recipientName: '',
+        subject,
+        message
+      };
+
+      if (this.emailjsConfig.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+        return await this.sendWithEmailJS(recipientEmail, emailTemplate);
+      } else {
+        return await this.sendDemoEmail(recipientEmail, emailTemplate);
+      }
+    } catch (error) {
+      console.error('Error sending custom email:', error);
+      return await this.sendDemoEmail(recipientEmail, { recipientName: '', subject, message });
+    }
+  }
+
   async sendDonationEmail(donorEmail, emailType, donationData, customMessage = '') {
     try {
       const emailTemplates = this.getDonationEmailTemplate(emailType, donationData, customMessage);

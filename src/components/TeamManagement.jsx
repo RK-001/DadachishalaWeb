@@ -1,11 +1,16 @@
 import { useState, useCallback, useMemo, memo } from 'react';
 import { Plus, Users, Crown, Briefcase, User, MessageCircle } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
-import { sanitizeString } from '../utils/validators';
 import LoadingSpinner from './common/LoadingSpinner';
 import Button from './common/Button';
 import TeamMemberCard from './team/TeamMemberCard';
 import TeamMemberFormModal from './team/TeamMemberFormModal';
+import {
+  useTeamMembers,
+  useAddTeamMember,
+  useUpdateTeamMember,
+  useDeleteTeamMember
+} from '../hooks/useFirebaseQueries';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Members', icon: Users },
@@ -14,28 +19,6 @@ const CATEGORIES = [
   { id: 'volunteer', label: 'Volunteers', icon: User },
   { id: 'community-voice', label: 'Community Voice', icon: MessageCircle }
 ];
-
-const useLocalStorage = (key, initialValue) => {
-  const [data, setData] = useState(() => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-
-  const setValue = useCallback((value) => {
-    try {
-      setData(value);
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-  }, [key]);
-
-  return [data, setValue];
-};
 
 const CategoryButton = memo(({ category, isActive, count, onClick }) => {
   const Icon = category.icon;
@@ -64,7 +47,10 @@ const EmptyState = memo(({ onAddNew }) => (
 EmptyState.displayName = 'EmptyState';
 
 const TeamManagement = () => {
-  const [teamMembers, setTeamMembers] = useLocalStorage('teamMembers', []);
+  const { data: teamMembers = [], isLoading } = useTeamMembers();
+  const addMember = useAddTeamMember();
+  const updateMember = useUpdateTeamMember();
+  const deleteMember = useDeleteTeamMember();
   const [state, setState] = useState({ showForm: false, editingMember: null, activeCategory: 'all' });
   const { showSuccess, showError } = useNotification();
 
@@ -82,40 +68,45 @@ const TeamManagement = () => {
 
   const handleDelete = useCallback((id) => {
     if (window.confirm('Are you sure you want to delete this team member?')) {
-      setTeamMembers(teamMembers.filter(m => m.id !== id));
-      showSuccess('Team member deleted successfully!');
+      deleteMember.mutate(id, {
+        onSuccess: () => showSuccess('Team member deleted successfully!'),
+        onError: () => showError('Failed to delete team member. Please try again.')
+      });
     }
-  }, [teamMembers, setTeamMembers, showSuccess]);
+  }, [deleteMember, showSuccess, showError]);
 
   const handleTestimonialToggle = useCallback((id) => {
-    setTeamMembers(teamMembers.map(m => m.id === id ? { ...m, isTestimonial: !m.isTestimonial } : m));
-    showSuccess('Testimonial status updated!');
-  }, [teamMembers, setTeamMembers, showSuccess]);
+    const member = teamMembers.find(m => m.id === id);
+    if (!member) return;
+    updateMember.mutate(
+      { memberId: id, updateData: { isTestimonial: !member.isTestimonial } },
+      {
+        onSuccess: () => showSuccess('Testimonial status updated!'),
+        onError: () => showError('Failed to update testimonial status.')
+      }
+    );
+  }, [teamMembers, updateMember, showSuccess, showError]);
 
   const handleFormSubmit = useCallback(async (formData) => {
     const { editingMember } = state;
     try {
-      const memberData = {
-        ...formData,
-        id: editingMember ? editingMember.id : Date.now(),
-        createdAt: editingMember ? editingMember.createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedMembers = editingMember 
-        ? teamMembers.map(m => m.id === editingMember.id ? memberData : m)
-        : [...teamMembers, memberData];
-
-      setTeamMembers(updatedMembers);
-      showSuccess(`Team member ${editingMember ? 'updated' : 'added'} successfully!`);
+      if (editingMember) {
+        await updateMember.mutateAsync({ memberId: editingMember.id, updateData: formData });
+        showSuccess('Team member updated successfully!');
+      } else {
+        await addMember.mutateAsync({ ...formData, order: teamMembers.length });
+        showSuccess('Team member added successfully!');
+      }
       setState(s => ({ ...s, showForm: false, editingMember: null }));
     } catch (error) {
       console.error('Error saving team member:', error);
       showError('Error saving team member. Please try again.');
     }
-  }, [state.editingMember, teamMembers, setTeamMembers, showSuccess, showError]);
+  }, [state.editingMember, teamMembers.length, addMember, updateMember, showSuccess, showError]);
 
   const updateState = useCallback((updates) => setState(s => ({ ...s, ...updates })), []);
+
+  if (isLoading) return <LoadingSpinner />;
 
   const { showForm, editingMember, activeCategory } = state;
 

@@ -191,14 +191,14 @@ const VolunteerManagement = () => {
       showSuccess(`Volunteer ${newStatus}!`);
       setState(s => ({ ...s, selectedVolunteer: null }));
       
-      // Send approval email in background (don't block or show errors if email fails)
-      if (newStatus === 'approved') {
+      // Send status email in background (don't block or show errors if email fails)
+      if (newStatus === 'approved' || newStatus === 'rejected') {
         const volunteer = volunteers.find(v => v.id === volunteerId);
         if (volunteer) {
           const email = volunteer.personal_info?.email || volunteer.email;
           const name = volunteer.personal_info?.full_name || volunteer.fullName;
           const branches = volunteer.skills_and_interests?.preferred_branches || [];
-          emailService.sendVolunteerEmail(email, 'approved', {
+          emailService.sendVolunteerEmail(email, newStatus, {
             fullName: name,
             preferredBranches: branches
           }).catch(err => {

@@ -19,9 +19,9 @@ const IMPACT_STATS = [
 ];
 
 const HERO_STATS = [
-  { val: '500+', label: 'Children Supported' },
-  { val: '15+', label: 'Years of Impact' },
-  { val: '10+', label: 'Programs Running' }
+  { num: 500, suffix: '+', label: 'Children Supported' },
+  { num: 15, suffix: '+', label: 'Years of Impact' },
+  { num: 10, suffix: '+', label: 'Programs Running' }
 ];
 
 // Custom hook for auto-scroll functionality
@@ -131,6 +131,7 @@ const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [foundationCounter, setFoundationCounter] = useState({ years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [currentEvent, setCurrentEvent] = useState(0);
   const [currentStory, setCurrentStory] = useState(0);
   const [currentAward, setCurrentAward] = useState(0);
@@ -148,6 +149,26 @@ const HomePage = () => {
   const eventsNav = useAutoScroll(eventsRef, eventsCount, 344, 5000, currentEvent, setCurrentEvent);
   const storiesNav = useAutoScroll(storiesRef, stories.length, 344, 5000, currentStory, setCurrentStory);
   const awardsNav = useAutoScroll(awardsRef, awards.length, 304, 4500, currentAward, setCurrentAward);
+
+  // Foundation day live counter
+  useEffect(() => {
+    const calcElapsed = () => {
+      const start = new Date(2019, 1, 10); // Feb 10, 2019
+      const now = new Date();
+      let years = now.getFullYear() - start.getFullYear();
+      let months = now.getMonth() - start.getMonth();
+      let days = now.getDate() - start.getDate();
+      if (days < 0) {
+        months--;
+        days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+      }
+      if (months < 0) { years--; months += 12; }
+      return { years, months, days, hours: now.getHours(), minutes: now.getMinutes(), seconds: now.getSeconds() };
+    };
+    setFoundationCounter(calcElapsed());
+    const timer = setInterval(() => setFoundationCounter(calcElapsed()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Loading states from React Query
   const loading = {
@@ -236,14 +257,34 @@ const HomePage = () => {
         <div className="absolute inset-0 bg-primary-600/80" />
 
         {/* Hero Content */}
-        <div className="relative z-10 flex items-center min-h-[80vh] sm:min-h-screen py-12 sm:py-0">
+        <div className="relative z-10 flex items-start min-h-[80vh] sm:min-h-screen pt-16 sm:pt-20 pb-12">
           <div className="container-custom">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              <div className="text-white space-y-6 sm:space-y-8 px-2 sm:px-4 md:px-6 lg:pl-12">
+              <div className="text-white space-y-4 sm:space-y-6 px-2 sm:px-4 md:px-6 lg:pl-12">
                 <div className="space-y-4 sm:space-y-6">
                   <div className="inline-flex items-center space-x-2 bg-white/10 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium">
-                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-300" /><span>Transforming Lives Since 2020</span>
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-300" /><span>Transforming Lives Since-</span>
                   </div>
+
+                  {/* Foundation Day Live Counter */}
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {[
+                      { value: foundationCounter.years, label: 'Years' },
+                      { value: foundationCounter.months, label: 'Months' },
+                      { value: foundationCounter.days, label: 'Days' },
+                      { value: foundationCounter.hours, label: 'Hours' },
+                      { value: foundationCounter.minutes, label: 'Mins' },
+                      { value: foundationCounter.seconds, label: 'Secs' },
+                    ].map(({ value, label }) => (
+                      <div key={label} className="flex flex-col items-center bg-white/10 backdrop-blur-sm border border-white/20 hover:border-yellow-300/60 hover:bg-white/15 rounded-xl px-2.5 sm:px-3.5 py-2 sm:py-3 min-w-[48px] sm:min-w-[58px] transition-all duration-300 group">
+                        <span className="text-yellow-300 font-bold text-lg sm:text-2xl leading-none tabular-nums group-hover:scale-110 transition-transform duration-300">
+                          {String(value).padStart(2, '0')}
+                        </span>
+                        <span className="text-white/60 text-[10px] sm:text-xs mt-1 font-medium uppercase tracking-wide">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                
                   <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-heading font-bold leading-tight">
                     <span className="block text-white">Empowering</span>
                     <span className="block text-yellow-300">Every Child's</span>
@@ -266,7 +307,13 @@ const HomePage = () => {
                 <div className="grid grid-cols-3 gap-3 sm:gap-6 pt-6 sm:pt-8 border-t border-white/20">
                   {HERO_STATS.map((s, i) => (
                     <div key={i} className="text-center">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-300">{s.val}</div>
+                      <AnimatedCounter
+                        end={s.num}
+                        suffix={s.suffix}
+                        duration={2500}
+                        startOnView={false}
+                        className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-300"
+                      />
                       <div className="text-sm text-gray-200">{s.label}</div>
                     </div>
                   ))}

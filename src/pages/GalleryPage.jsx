@@ -34,7 +34,6 @@ const GalleryPage = () => {
   const { data: newsItems = [], isLoading: newsLoading, error: newsError } = useNews();
   const { data: blogs = [], isLoading: blogsLoading, error: blogsError } = useBlogs();
   
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [selectedBlog, setSelectedBlog] = useState(null);
@@ -61,21 +60,6 @@ const GalleryPage = () => {
     ...award,
     icon: getAwardIcon(award.title)
   }));
-
-  // Dynamic categories based on actual photo data
-  const categories = [
-    { id: 'all', name: 'All Photos', count: photos.length },
-    { id: 'education', name: 'Education', count: photos.filter(p => p.category === 'education').length },
-    { id: 'activities', name: 'Activities', count: photos.filter(p => p.category === 'activities').length },
-    { id: 'events', name: 'Events', count: photos.filter(p => p.category === 'events').length },
-    { id: 'volunteers', name: 'Volunteers', count: photos.filter(p => p.category === 'volunteers').length },
-    { id: 'community', name: 'Community', count: photos.filter(p => p.category === 'community').length },
-    { id: 'achievements', name: 'Achievements', count: photos.filter(p => p.category === 'achievements').length }
-  ].filter(cat => cat.id === 'all' || cat.count > 0); // Only show categories with content
-
-  const filteredPhotos = selectedCategory === 'all' 
-    ? photos 
-    : photos.filter(photo => photo.category === selectedCategory);
 
   const openImageModal = (photo) => {
     setSelectedImage(photo);
@@ -148,7 +132,7 @@ const GalleryPage = () => {
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
         <div className="container-custom text-center">
           <Camera className="w-16 h-16 mx-auto mb-6 text-secondary-400" />
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl block text-white mb-4">
             Achievements & Milestones
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">
@@ -226,27 +210,10 @@ const GalleryPage = () => {
             </p>
           </div>
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                  selectedCategory === category.id
-                    ? 'bg-primary-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.name} ({category.count})
-              </button>
-            ))}
-          </div>
-
           {/* Photo Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPhotos.length > 0 ? (
-              filteredPhotos.map((photo) => (
+            {photos.length > 0 ? (
+              photos.map((photo) => (
                 <div 
                   key={photo.id} 
                   className="group cursor-pointer overflow-hidden rounded-lg shadow-lg bg-white hover:shadow-xl transition-all duration-300"
@@ -271,15 +238,8 @@ const GalleryPage = () => {
             ) : (
               <div className="col-span-full text-center py-12">
                 <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {selectedCategory === 'all' ? 'No Photos Yet' : `No ${categories.find(c => c.id === selectedCategory)?.name} Photos`}
-                </h3>
-                <p className="text-gray-600">
-                  {selectedCategory === 'all' 
-                    ? 'Photos will appear here once added to the gallery.' 
-                    : 'Try selecting a different category or check back later.'
-                  }
-                </p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Photos Yet</h3>
+                <p className="text-gray-600">Photos will appear here once added to the gallery.</p>
               </div>
             )}
           </div>

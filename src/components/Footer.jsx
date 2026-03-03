@@ -66,8 +66,8 @@ const Footer = () => {
                 <img src="/logos/logo.png" alt="Dada Chi Shala Logo" loading="lazy" className="w-full h-full object-contain" />
               </div>
               <div className="min-w-0">
-                <h4 className="text-base font-heading font-bold text-white truncate">Educare(Dada Chi Shala)</h4>
-                <p className="text-sm text-gray-400">Education Trust</p>
+                <h4 className="text-base font-heading font-bold text-white truncate">Dada Chi Shala</h4>
+                <p className="text-sm text-gray-400">Educare Educational Trust</p>
               </div>
             </div>
             <p className="text-gray-300 mb-4 text-sm leading-relaxed">
@@ -115,7 +115,7 @@ const Footer = () => {
         {/* Bottom Footer */}
         <div className="border-t border-gray-700/50 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
-            <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Educare (Dada Chi Shala). All rights reserved.</p>
+            <p className="text-gray-400 text-sm">© {new Date().getFullYear()} Dada Chi Shala. All rights reserved.</p>
             <div className="flex gap-4">
               {FOOTER_LINKS.map(l => (
                 <Link key={l.to} to={l.to} className="text-gray-400 hover:text-primary-400 text-sm transition-colors">
