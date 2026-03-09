@@ -54,7 +54,7 @@ if (typeof window !== 'undefined' &&
   try {
     analytics = getAnalytics(app);
   } catch (error) {
-    console.warn('Firebase Analytics could not be initialized:', error. message);
+    console.warn('Firebase Analytics could not be initialized:', error.message);
   }
 }
 export { analytics };

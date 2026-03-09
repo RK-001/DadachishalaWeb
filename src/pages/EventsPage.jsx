@@ -1,36 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import React from 'react';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import EventCard from '../components/EventCard';
 import SEO from '../components/SEO';
+import { useEvents } from '../hooks/useFirebaseQueries';
 
 const EventsPage = () => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const q = query(
-        collection(db, 'events'),
-        orderBy('event_date', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      const eventsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setEvents(eventsData);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: events = [], isLoading: loading } = useEvents();
 
   const eventsSchema = {
     "@context": "https://schema.org",
@@ -61,7 +36,7 @@ const EventsPage = () => {
       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
         <div className="container-custom text-center">
           <Calendar className="w-16 h-16 mx-auto mb-6 text-secondary-400" />
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
+          <h1 className="text-4xl md:text-5xl block text-white mb-4">
             Our Events
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">

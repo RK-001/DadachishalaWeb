@@ -22,7 +22,7 @@ export default defineConfig({
           firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage'],
           ui: ['framer-motion', 'lucide-react', 'react-modal'],
           forms: ['react-hook-form', '@hookform/resolvers', 'yup'],
-          utils: ['emailjs-com']
+          utils: ['@emailjs/browser']
         },
       }
     },

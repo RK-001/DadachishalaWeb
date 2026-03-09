@@ -394,7 +394,7 @@ const VolunteerPage = () => {
         </div>
         <div className="relative container-custom">
           <div className="max-w-4xl mx-auto text-center text-white">
-            <h1 className="text-5xl md:text-6xl font-heading font-bold mb-6">
+            <h1 className="text-5xl md:text-6xl block text-white mb-6">
               Volunteer With Us
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-primary-100 leading-relaxed">

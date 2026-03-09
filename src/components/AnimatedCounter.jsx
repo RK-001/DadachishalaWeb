@@ -1,12 +1,5 @@
-import { useState, useEffect, useRef, memo, useMemo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 
-/**
- * Optimized AnimatedCounter Component
- * - Secure input sanitization
- * - Memory leak prevention
- * - Latest React patterns (useMemo, cleanup)
- * - Reduced re-renders
- */
 const AnimatedCounter = memo(({
   end,
   duration = 2000,
@@ -16,93 +9,60 @@ const AnimatedCounter = memo(({
   startOnView = true
 }) => {
   const [count, setCount] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
-  const counterRef = useRef(null);
-  const animationRef = useRef(null);
+  const spanRef = useRef(null);
+  const rafRef = useRef(null);
 
-  // Secure: Sanitize and parse end value (prevent XSS/injection)
-  const numericEnd = useMemo(() => {
-    if (typeof end === 'number') return Math.max(0, Math.floor(end));
-    if (typeof end === 'string') {
-      const parsed = parseInt(end.replace(/\D/g, ''), 10);
-      return isNaN(parsed) ? 0 : Math.max(0, parsed);
-    }
-    return 0;
-  }, [end]);
-
-  // Memoize formatted number
-  const formattedCount = useMemo(() => count.toLocaleString(), [count]);
+  const numericEnd = typeof end === 'number'
+    ? Math.max(0, Math.floor(end))
+    : Math.max(0, parseInt(String(end).replace(/\D/g, ''), 10) || 0);
 
   useEffect(() => {
-    // Early start if not waiting for viewport
-    if (!startOnView && !hasStarted) {
-      setHasStarted(true);
-      
+    // Keep latest values accessible inside the RAF without stale closures
+    const target = numericEnd;
+    const dur = duration;
+
+    const run = () => {
       const startTime = performance.now();
-      const animate = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        
-        if (elapsed < duration) {
-          const progress = elapsed / duration;
-          const easeOut = 1 - Math.pow(1 - progress, 3);
-          setCount(Math.floor(numericEnd * easeOut));
-          animationRef.current = requestAnimationFrame(animate);
+      const tick = (now) => {
+        const elapsed = now - startTime;
+        if (elapsed < dur) {
+          const easeOut = 1 - Math.pow(1 - elapsed / dur, 3);
+          setCount(Math.floor(target * easeOut));
+          rafRef.current = requestAnimationFrame(tick);
         } else {
-          setCount(numericEnd);
-          animationRef.current = null;
+          setCount(target);
+          rafRef.current = null;
         }
       };
-      
-      animationRef.current = requestAnimationFrame(animate);
-      return () => {
-        if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      };
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    let observer;
+    if (!startOnView) {
+      run();
+    } else {
+      observer = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) { observer.disconnect(); run(); } },
+        { threshold: 0.1 }
+      );
+      if (spanRef.current) observer.observe(spanRef.current);
     }
 
-    // IntersectionObserver for viewport detection
-    if (!counterRef.current || hasStarted) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasStarted) {
-          setHasStarted(true);
-          
-          const startTime = performance.now();
-          const animate = (currentTime) => {
-            const elapsed = currentTime - startTime;
-            
-            if (elapsed < duration) {
-              const progress = elapsed / duration;
-              const easeOut = 1 - Math.pow(1 - progress, 3);
-              setCount(Math.floor(numericEnd * easeOut));
-              animationRef.current = requestAnimationFrame(animate);
-            } else {
-              setCount(numericEnd);
-              animationRef.current = null;
-            }
-          };
-          
-          animationRef.current = requestAnimationFrame(animate);
-        }
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    observer.observe(counterRef.current);
-
     return () => {
-      observer.disconnect();
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      // Reset count so StrictMode double-invoke restarts cleanly
+      setCount(0);
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+      if (observer) observer.disconnect();
     };
-  }, [startOnView, hasStarted, numericEnd, duration]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numericEnd, duration, startOnView]);
 
   return (
-    <span ref={counterRef} className={className} aria-live="polite">
-      {prefix}{formattedCount}{suffix}
+    <span ref={spanRef} className={className}>
+      {prefix}{count.toLocaleString()}{suffix}
     </span>
   );
 });
 
 AnimatedCounter.displayName = 'AnimatedCounter';
-
 export default AnimatedCounter;

@@ -1,3 +1,27 @@
+# Dada Chi Shala — Knowledge Base & Project Guide
+
+> **Organization:** Educare (Dada Chi Shala) Educational Trust  
+> **Scope:** NGO Website — Public Portal + Admin Dashboard + Cloud Backend  
+> **Tech Foundation:** React 18 · Vite · Tailwind CSS · Firebase · Razorpay  
+> **Last Updated:** 2026-03-09
+
+---
+
+## For AI Agents / Chat Agents
+
+This README is the **entry point** for any AI agent working on this codebase. Start here, then follow the navigation below:
+
+| Agent Priority | File | When to Read |
+|----------------|------|-------------|
+| 1 (Always) | `INDEX.md` | Navigation + keyword lookup + agent rules |
+| 2 (Always) | Target doc from INDEX | Relevant module detail |
+| 3 (Usually) | `doc/quick-reference.md` | Firestore schema, hooks, environment variables |
+| 4 (Rare) | Individual `doc/0N-*.md` files | Deep module-level technical context |
+
+**Never guess field names, collection names, or component APIs** — look them up in `doc/quick-reference.md` first.
+
+---
+
 # Dada Chi Shala Website
 
 A modern, full-featured NGO website for **Educare (Dada Chi Shala) Education Trust** — a Pune-based organization providing free quality education to street and underprivileged children across Maharashtra.
@@ -234,3 +258,6 @@ firebase deploy
 
 ---
 
+## License
+
+MIT

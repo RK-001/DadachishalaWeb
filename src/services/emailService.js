@@ -1,7 +1,7 @@
 // Email service for sending notifications to volunteers
 // Using EmailJS for client-side email sending
 
-import emailjs from 'emailjs-com';
+import emailjs from '@emailjs/browser';
 
 class EmailService {
   constructor() {
@@ -43,6 +43,25 @@ class EmailService {
       console.error('Error sending email:', error);
       // Fallback to demo mode
       return await this.sendDemoEmail(volunteerEmail, emailTemplates);
+    }
+  }
+
+  async sendCustomEmail(recipientEmail, subject, message) {
+    try {
+      const emailTemplate = {
+        recipientName: '',
+        subject,
+        message
+      };
+
+      if (this.emailjsConfig.publicKey !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+        return await this.sendWithEmailJS(recipientEmail, emailTemplate);
+      } else {
+        return await this.sendDemoEmail(recipientEmail, emailTemplate);
+      }
+    } catch (error) {
+      console.error('Error sending custom email:', error);
+      return await this.sendDemoEmail(recipientEmail, { recipientName: '', subject, message });
     }
   }
 

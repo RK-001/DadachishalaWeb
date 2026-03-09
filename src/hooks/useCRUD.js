@@ -1,70 +1,64 @@
 import { useState, useCallback } from 'react';
 
 /**
- * Custom hook for CRUD operations with loading and error states
+ * Custom hook for CRUD operations with loading and error states.
+ * Reads should be handled by React Query hooks (useFirebaseQueries.js).
+ * This hook is intended solely for create / update / delete side-effects.
+ *
  * @param {string} resourceName - Name of the resource (e.g., 'blogs', 'events')
  * @param {Function} createFn - Function to create a new item
  * @param {Function} updateFn - Function to update an existing item
  * @param {Function} deleteFn - Function to delete an item
- * @param {Function} refetch - Function to refetch data after operations
+ * @param {Function} [refetch] - Optional React Query refetch to call after mutations
  * @returns {Object} - CRUD operation handlers with loading/error states
  */
 export const useCRUD = (resourceName, createFn, updateFn, deleteFn, refetch) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const executeOperation = useCallback(async (operation, successMessage) => {
+  const executeOperation = useCallback(async (operation) => {
     setLoading(true);
     setError(null);
 
     try {
       const result = await operation();
-      setLoading(false);
-      
-      if (refetch) {
-        await refetch();
-      }
-      
+      if (refetch) await refetch();
       return { success: true, data: result };
     } catch (err) {
       console.error(`${resourceName} operation error:`, err);
       setError(err.message || 'An error occurred');
-      setLoading(false);
-      
       return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
     }
   }, [resourceName, refetch]);
 
-  const create = useCallback(async (data) => {
-    return executeOperation(() => createFn(data), 'Created successfully');
-  }, [executeOperation, createFn]);
+  const create = useCallback(
+    (data) => executeOperation(() => createFn(data)),
+    [executeOperation, createFn]
+  );
 
-  const read = useCallback(async () => {
-    return executeOperation(createFn);
-  }, [executeOperation, createFn]);
+  const update = useCallback(
+    (id, data) => executeOperation(() => updateFn(id, data)),
+    [executeOperation, updateFn]
+  );
 
-  const update = useCallback(async (id, data) => {
-    return executeOperation(() => updateFn(id, data), 'Updated successfully');
-  }, [executeOperation, updateFn]);
+  const remove = useCallback(
+    (id) => executeOperation(() => deleteFn(id)),
+    [executeOperation, deleteFn]
+  );
 
-  const remove = useCallback(async (id) => {
-    return executeOperation(() => deleteFn(id), 'Deleted successfully');
-  }, [executeOperation, deleteFn]);
-
-  const resetError = useCallback(() => {
-    setError(null);
-  }, []);
+  const resetError = useCallback(() => setError(null), []);
 
   return {
     loading,
     error,
     create,
-    read,
     update,
     remove,
-    delete: remove, // Alias for remove
+    delete: remove,
     resetError,
-    executeOperation
+    executeOperation,
   };
 };
 
