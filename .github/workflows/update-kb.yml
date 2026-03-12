@@ -1,18 +1,27 @@
-name: Agentic KB Updater
+name: KB Updater
+# Generic Knowledge Base maintenance workflow.
+# Configuration lives in .github/kb-config.yml — no edits needed here when
+# source files are added or renamed; update the mappings in kb-config.yml instead.
 
 on:
   pull_request:
     types: [closed]
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      pull_number:
+        description: "PR number to process (required for manual runs)"
+        required: false
+        type: string
 
 concurrency:
-  group: kb-updater-${{ github.event.pull_request.number }}
+  group: kb-updater-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
   update-knowledge-base:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,209 +37,250 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.KB_BOT_PAT || github.token }}
 
-      - name: Run GitHub-native KB agent
+      # ── Step 1: Parse kb-config.yml + match PR changed files against mappings ──
+      # Python3 (available on ubuntu-latest) handles YAML parsing and glob matching.
+      # Outputs /tmp/kb_resolve.json consumed by the next step.
+      - name: Resolve affected KB docs from config
+        id: resolve_docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pull_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 << 'PYEOF' > /tmp/kb_resolve.json
+          import yaml, json, fnmatch, os, urllib.request, sys
+
+          def get_pr_files(token, repo, pr_number):
+            files = []
+            page = 1
+            while True:
+              url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files?per_page=100&page={page}"
+              req = urllib.request.Request(url, headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+              })
+              with urllib.request.urlopen(req) as resp:
+                batch = json.loads(resp.read())
+              if not batch:
+                break
+              files.extend(f["filename"] for f in batch)
+              if len(batch) < 100:
+                break
+              page += 1
+            return files
+
+          try:
+            with open(".github/kb-config.yml") as f:
+              config = yaml.safe_load(f) or {}
+          except Exception as e:
+            print(json.dumps({"error": str(e), "config": {}, "kb_doc_to_sources": {}, "unmatched_files": [], "changed_files": []}))
+            sys.exit(0)
+
+          pr_number = os.environ.get("PR_NUMBER", "").strip()
+          token = os.environ.get("GH_TOKEN", "")
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+
+          changed_files = []
+          if pr_number and token and repo:
+            try:
+              changed_files = get_pr_files(token, repo, pr_number)
+            except Exception as e:
+              sys.stderr.write(f"Warning: Could not fetch PR files: {e}\n")
+
+          ignore_patterns = config.get("ignore_patterns", [])
+
+          def is_ignored(filepath):
+            return any(fnmatch.fnmatch(filepath, pat) for pat in ignore_patterns)
+
+          source_files = [f for f in changed_files if not is_ignored(f)]
+          mappings = config.get("mappings", [])
+          kb_doc_to_sources = {}
+          unmatched_files = []
+
+          for source_file in source_files:
+            matched = False
+            for mapping in mappings:
+              if fnmatch.fnmatch(source_file, mapping.get("pattern", "")):
+                for doc in mapping.get("docs", []):
+                  kb_doc_to_sources.setdefault(doc, [])
+                  if source_file not in kb_doc_to_sources[doc]:
+                    kb_doc_to_sources[doc].append(source_file)
+                matched = True
+            if not matched:
+              unmatched_files.append(source_file)
+
+          result = {
+            "config": {
+              "kb_directory": config.get("kb_directory", "doc"),
+              "index_file": config.get("index_file", "INDEX.md"),
+              "model_id": config.get("model_id", "openai/gpt-4.1"),
+              "max_diff_chars": config.get("max_diff_chars", 40000),
+              "max_doc_chars": config.get("max_doc_chars", 80000),
+            },
+            "kb_doc_to_sources": kb_doc_to_sources,
+            "unmatched_files": unmatched_files,
+            "changed_files": changed_files,
+          }
+          print(json.dumps(result))
+          PYEOF
+
+          echo "=== Resolve result ==="
+          cat /tmp/kb_resolve.json
+
+      # ── Step 2: LLM-powered KB updates ───────────────────────────────────────
+      - name: Run KB agent
         id: kb_agent
         uses: actions/github-script@v7
         continue-on-error: true
         env:
-          MODEL_ID: openai/gpt-4.1
           GITHUB_MODELS_TOKEN: ${{ github.token }}
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
 
+            // ── Load config resolved by the Python step ──────────────────────
+            const resolveResult = JSON.parse(
+              fs.readFileSync('/tmp/kb_resolve.json', 'utf8')
+            );
+            const config = resolveResult.config || {};
+            const kbDirectory = config.kb_directory || 'doc';
+            const indexFile = config.index_file || 'INDEX.md';
+            const modelId = config.model_id || 'openai/gpt-4.1';
+            const maxDiffChars = config.max_diff_chars || 40000;
+            const maxDocChars = config.max_doc_chars || 80000;
+
+            let kbDocToSources = resolveResult.kb_doc_to_sources || {};
+            const unmatchedFiles = resolveResult.unmatched_files || [];
+            const changedFiles = resolveResult.changed_files || [];
+
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const pullNumber = context.payload.pull_request.number;
-            const prTitle = context.payload.pull_request.title || 'Untitled PR';
-            const prBody = context.payload.pull_request.body || '';
-            const prAuthor = context.payload.pull_request.user?.login || 'unknown';
-            const prLabels = (context.payload.pull_request.labels || []).map((label) => label.name).join(', ');
+            const prPayload = context.payload.pull_request || {};
+            const pullNumber = prPayload.number || parseInt(process.env.MANUAL_PR_NUMBER || '0', 10);
+            const prTitle = prPayload.title || 'Manual run';
+            const prBody = prPayload.body || '';
+            const prAuthor = prPayload.user?.login || 'unknown';
+            const prLabels = (prPayload.labels || []).map((l) => l.name).join(', ');
             const workspace = process.env.GITHUB_WORKSPACE;
-            const modelId = process.env.MODEL_ID;
             const modelsToken = process.env.GITHUB_MODELS_TOKEN;
             const today = new Date().toISOString().slice(0, 10);
 
-            const fileToKbMap = [
-              [/^src\/pages\/HomePage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/AboutPage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/GalleryPage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/TeamPage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/MediaPage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/ContactPage\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/GalleryCard/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/GalleryGrid/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/BlogCard/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/AnimatedCounter/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/Card\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/SEO\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/components\/Footer\.jsx$/, ['doc/01-public-storytelling-module.md']],
-              [/^src\/pages\/EventsPage\.jsx$/, ['doc/02-events-module.md']],
-              [/^src\/components\/Event/, ['doc/02-events-module.md']],
-              [/^src\/pages\/VolunteerPage\.jsx$/, ['doc/03-community-engagement-module.md']],
-              [/^src\/pages\/BranchesPage\.jsx$/, ['doc/03-community-engagement-module.md']],
-              [/^src\/components\/VolunteerManagement/, ['doc/03-community-engagement-module.md']],
-              [/^src\/components\/Branch/, ['doc/03-community-engagement-module.md']],
-              [/^src\/pages\/DonatePage\.jsx$/, ['doc/04-donations-fundraising-module.md']],
-              [/^src\/components\/DonationManagement/, ['doc/04-donations-fundraising-module.md']],
-              [/^src\/services\/razorpayService/, ['doc/04-donations-fundraising-module.md']],
-              [/^functions\/index\.js$/, ['doc/04-donations-fundraising-module.md']],
-              [/^src\/pages\/AdminDashboard\.jsx$/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/GalleryManagement/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/GalleryForm/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/TeamManagement/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/BlogManagement/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/BlogModal/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/StoriesTestimonialsManagement/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/ImageUpload/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/components\/AdminSetup/, ['doc/05-admin-content-management-module.md']],
-              [/^src\/App\.jsx$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/pages\/AdminLogin\.jsx$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/pages\/MaintenancePage\.jsx$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/pages\/NotFoundPage\.jsx$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/context\/AuthContext/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/context\/NotificationContext/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/components\/ProtectedRoute/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/components\/ErrorBoundary/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/components\/ScrollToTop/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/components\/Navbar/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/services\/firebase\.js$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/config\//, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^firebase\.json$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^vercel\.json$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^vite\.config\.js$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^tailwind\.config\.js$/, ['doc/06-platform-infrastructure-auth-module.md']],
-              [/^src\/hooks\/useFirebaseQueries/, ['doc/quick-reference.md']],
-              [/^src\/hooks\/useCRUD/, ['doc/quick-reference.md']],
-              [/^src\/hooks\/useFirestore/, ['doc/quick-reference.md']],
-              [/^src\/services\/cachedDatabaseService/, ['doc/quick-reference.md']],
-              [/^src\/services\/cacheService/, ['doc/quick-reference.md']],
-              [/^src\/services\/emailService/, ['doc/quick-reference.md']],
-              [/^src\/services\/imageUploadService/, ['doc/quick-reference.md']],
-              [/^src\/utils\//, ['doc/quick-reference.md']],
-              [/^package\.json$/, ['doc/quick-reference.md', 'doc/06-platform-infrastructure-auth-module.md']],
-            ];
+            core.info(`Changed files: ${JSON.stringify(changedFiles)}`);
+            core.info(`Explicitly mapped KB docs: ${JSON.stringify(Object.keys(kbDocToSources))}`);
+            core.info(`Unmatched source files (LLM will resolve): ${JSON.stringify(unmatchedFiles)}`);
 
-            const indexTriggerDocs = new Set([
-              'doc/01-public-storytelling-module.md',
-              'doc/02-events-module.md',
-              'doc/03-community-engagement-module.md',
-              'doc/04-donations-fundraising-module.md',
-              'doc/05-admin-content-management-module.md',
-              'doc/06-platform-infrastructure-auth-module.md',
-              'doc/quick-reference.md',
-            ]);
+            // ── Helpers ──────────────────────────────────────────────────────
+            const readWorkspaceFile = (relativePath) =>
+              fs.readFileSync(path.join(workspace, relativePath), 'utf8');
+
+            const writeWorkspaceFile = (relativePath, content) =>
+              fs.writeFileSync(path.join(workspace, relativePath), content, 'utf8');
+
+            const callModel = async (messages) => {
+              const response = await fetch('https://models.github.ai/inference/chat/completions', {
+                method: 'POST',
+                headers: {
+                  Accept: 'application/vnd.github+json',
+                  Authorization: `Bearer ${modelsToken}`,
+                  'Content-Type': 'application/json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+                body: JSON.stringify({ model: modelId, temperature: 0.1, max_tokens: 4000, messages }),
+              });
+              if (!response.ok) {
+                const body = await response.text();
+                throw new Error(`GitHub Models request failed (${response.status}): ${body}`);
+              }
+              const payload = await response.json();
+              return payload.choices?.[0]?.message?.content || '';
+            };
+
+            const extractDiffForFiles = (diffText, files) => {
+              const blocks = diffText.split(/(?=^diff --git )/m);
+              return blocks
+                .filter((block) => files.some((f) => block.includes(` b/${f}`)))
+                .join('\n')
+                .slice(0, maxDiffChars);
+            };
 
             const systemPrompt = [
-              'You maintain the Knowledge Base for the Dada Chi Shala website repository.',
+              'You are a Knowledge Base maintainer for an engineering repository.',
               'Update only the KB sections directly justified by the provided merged PR diff.',
               'Preserve existing headings, tables, Mermaid blocks, and requirement IDs unless the diff clearly changes them.',
               `Update date fields to ${today} only when the document content changes.`,
               'Return only the complete updated markdown document. No code fences. No explanation.',
             ].join(' ');
 
-            const listFiles = await github.paginate(github.rest.pulls.listFiles, {
-              owner,
-              repo,
-              pull_number: pullNumber,
-              per_page: 100,
-            });
-
-            const changedFiles = listFiles.map((file) => file.filename);
-            const sourceFiles = changedFiles.filter((file) => !file.startsWith('doc/') && file !== 'INDEX.md' && !file.startsWith('.github/'));
-
-            const kbDocToSources = {};
-            for (const sourceFile of sourceFiles) {
-              for (const [pattern, kbDocs] of fileToKbMap) {
-                if (pattern.test(sourceFile)) {
-                  for (const kbDoc of kbDocs) {
-                    kbDocToSources[kbDoc] ||= [];
-                    if (!kbDocToSources[kbDoc].includes(sourceFile)) {
-                      kbDocToSources[kbDoc].push(sourceFile);
-                    }
-                  }
-                }
-              }
-            }
-
-            const affectedDocs = Object.keys(kbDocToSources);
-            core.info(`Changed files: ${JSON.stringify(changedFiles)}`);
-            core.info(`Affected KB docs: ${JSON.stringify(affectedDocs)}`);
-
-            if (affectedDocs.length === 0) {
+            // ── Fetch PR diff ─────────────────────────────────────────────────
+            if (!pullNumber) {
               core.setOutput('changed', 'false');
               core.setOutput('updated_docs', '');
               core.setOutput('diff_bytes', '0');
+              core.warning('No PR number available. Skipping.');
               return;
             }
 
             const diffResponse = await github.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
-              owner,
-              repo,
-              pull_number: pullNumber,
-              headers: {
-                accept: 'application/vnd.github.v3.diff',
-              },
+              owner, repo, pull_number: pullNumber,
+              headers: { accept: 'application/vnd.github.v3.diff' },
             });
-
             const fullDiff = String(diffResponse.data || '');
             core.setOutput('diff_bytes', String(Buffer.byteLength(fullDiff, 'utf8')));
 
-            const extractDiffForFiles = (diffText, files) => {
-              const blocks = diffText.split(/(?=^diff --git )/m);
-              const relevant = [];
-              for (const block of blocks) {
-                if (files.some((file) => block.includes(` b/${file}`))) {
-                  relevant.push(block);
+            // ── LLM-resolve unmatched files via INDEX.md ──────────────────────
+            if (unmatchedFiles.length > 0) {
+              const indexContent = readWorkspaceFile(indexFile);
+              const resolvePrompt = [
+                'Below is the repository INDEX.md that lists all Knowledge Base documents and what they cover.',
+                'Based on the list of changed source files, identify which KB doc files (if any) should be updated.',
+                'Return ONLY a JSON object with one key "mappings": an array of objects {source_file, kb_doc}.',
+                'If a source file has no relevant KB doc, omit it. Do not invent doc paths not in the INDEX.',
+                '',
+                `Changed source files: ${JSON.stringify(unmatchedFiles)}`,
+                '',
+                'INDEX.md:',
+                indexContent.slice(0, 30000),
+              ].join('\n');
+
+              try {
+                const resolveRaw = await callModel([
+                  { role: 'system', content: 'You are a documentation routing assistant. Return raw JSON only, no markdown fences.' },
+                  { role: 'user', content: resolvePrompt },
+                ]);
+                const cleaned = resolveRaw.replace(/```json\n?|```\n?/g, '').trim();
+                const resolved = JSON.parse(cleaned);
+                for (const { source_file, kb_doc } of resolved.mappings || []) {
+                  kbDocToSources[kb_doc] ||= [];
+                  if (!kbDocToSources[kb_doc].includes(source_file)) {
+                    kbDocToSources[kb_doc].push(source_file);
+                  }
                 }
+                core.info(`LLM-resolved additional KB docs: ${JSON.stringify(resolved.mappings)}`);
+              } catch (e) {
+                core.warning(`LLM routing for unmatched files failed: ${e.message}`);
               }
-              return relevant.join('\n').slice(0, 40000);
-            };
+            }
 
-            const callModel = async (messages) => {
-              const response = await fetch('https://models.github.ai/inference/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Accept': 'application/vnd.github+json',
-                  'Authorization': `Bearer ${modelsToken}`,
-                  'Content-Type': 'application/json',
-                  'X-GitHub-Api-Version': '2022-11-28',
-                },
-                body: JSON.stringify({
-                  model: modelId,
-                  temperature: 0.1,
-                  max_tokens: 4000,
-                  messages,
-                }),
-              });
+            const affectedDocs = Object.keys(kbDocToSources);
+            core.info(`Final affected KB docs: ${JSON.stringify(affectedDocs)}`);
 
-              if (!response.ok) {
-                const body = await response.text();
-                throw new Error(`GitHub Models request failed (${response.status}): ${body}`);
-              }
+            if (affectedDocs.length === 0) {
+              core.setOutput('changed', 'false');
+              core.setOutput('updated_docs', '');
+              return;
+            }
 
-              const payload = await response.json();
-              return payload.choices?.[0]?.message?.content || '';
-            };
-
-            const readWorkspaceFile = (relativePath) => {
-              return fs.readFileSync(path.join(workspace, relativePath), 'utf8');
-            };
-
-            const writeWorkspaceFile = (relativePath, content) => {
-              fs.writeFileSync(path.join(workspace, relativePath), content, 'utf8');
-            };
-
+            // ── Update each affected KB doc ───────────────────────────────────
             const updatedDocs = [];
             const kbSummaries = {};
 
             for (const kbDoc of affectedDocs) {
-              const currentContent = readWorkspaceFile(kbDoc);
+              let currentContent;
+              try { currentContent = readWorkspaceFile(kbDoc); } catch { continue; }
               const relevantDiff = extractDiffForFiles(fullDiff, kbDocToSources[kbDoc]);
-              if (!relevantDiff.trim()) {
-                continue;
-              }
+              if (!relevantDiff.trim()) continue;
 
               const userPrompt = [
                 `PR #${pullNumber}: ${prTitle}`,
@@ -247,7 +297,7 @@ jobs:
                 relevantDiff,
                 '',
                 'Current KB markdown:',
-                currentContent.slice(0, 80000),
+                currentContent.slice(0, maxDocChars),
               ].join('\n');
 
               const updatedContent = await callModel([
@@ -262,13 +312,12 @@ jobs:
               }
             }
 
-            if (updatedDocs.some((doc) => indexTriggerDocs.has(doc))) {
-              const indexPath = 'INDEX.md';
-              const currentIndex = readWorkspaceFile(indexPath);
+            // ── Update INDEX.md when any KB doc changed ───────────────────────
+            if (updatedDocs.length > 0) {
+              const currentIndex = readWorkspaceFile(indexFile);
               const summaryText = Object.entries(kbSummaries)
                 .map(([doc, sources]) => `- ${doc}: ${sources}`)
                 .join('\n');
-
               const indexPrompt = [
                 `PR #${pullNumber}: ${prTitle}`,
                 `Author: @${prAuthor}`,
@@ -276,63 +325,70 @@ jobs:
                 'Updated KB docs in this run:',
                 summaryText || '(none)',
                 '',
-                'Merged diff:',
+                'Merged diff (first 20 000 chars):',
                 fullDiff.slice(0, 20000),
                 '',
                 'Current INDEX.md:',
-                currentIndex.slice(0, 80000),
+                currentIndex.slice(0, maxDocChars),
                 '',
-                'Only add or refine keyword lookup rows justified by this PR. Do not remove existing rows.',
+                'INDEX.md format rules:',
+                '- Each module entry must have: ### {Title}, **File:** `path`, **Keywords:** csv-list, **Covers:** one-line summary.',
+                '- Only add or refine entries justified by this PR. Do not remove existing entries.',
+                '- Preserve all existing structure, tables, and agent operation rules.',
               ].join('\n');
 
               const updatedIndex = await callModel([
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: indexPrompt },
               ]);
-
               if (updatedIndex.trim() && updatedIndex.trim() !== currentIndex.trim()) {
-                writeWorkspaceFile(indexPath, `${updatedIndex.trimEnd()}\n`);
-                updatedDocs.push(indexPath);
+                writeWorkspaceFile(indexFile, `${updatedIndex.trimEnd()}\n`);
+                updatedDocs.push(indexFile);
               }
             }
 
             core.setOutput('changed', updatedDocs.length > 0 ? 'true' : 'false');
             core.setOutput('updated_docs', updatedDocs.join('\n'));
 
+      # ── Step 3: Stage, detect and commit changes directly to main ─────────
       - name: Detect staged KB changes
         id: detect_changes
         run: |
-          git add doc/ INDEX.md 2>/dev/null || true
+          git add doc/ KB-INDEX.md 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit KB updates
+      - name: Commit KB updates to main
         if: steps.detect_changes.outputs.changed == 'true'
         run: |
           git config user.name "KB Update Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "docs(kb): auto-update after PR #${{ github.event.pull_request.number }}
+          git commit -m "docs(kb): auto-update after PR #${{ github.event.pull_request.number || inputs.pull_number }}
 
-          PR: ${{ github.event.pull_request.title }}
-          Author: @${{ github.event.pull_request.user.login }}
-          Ref: https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+          PR: ${{ github.event.pull_request.title || 'Manual run' }}
+          Author: @${{ github.event.pull_request.user.login || 'workflow_dispatch' }}
+          Ref: https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number || inputs.pull_number }}
 
           [skip ci]"
           git push origin main
 
+      # ── Step 4: Job summary ───────────────────────────────────────────────
       - name: Write job summary
         if: always()
         run: |
-          PR_URL="https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
-          echo "## Agentic KB Updater" >> "$GITHUB_STEP_SUMMARY"
+          PR_NUM="${{ github.event.pull_request.number || inputs.pull_number }}"
+          PR_TITLE="${{ github.event.pull_request.title || 'Manual run' }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login || 'workflow_dispatch' }}"
+          PR_URL="https://github.com/${{ github.repository }}/pull/${PR_NUM}"
+          echo "## KB Updater" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| PR | [#${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}](${PR_URL}) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Author | @${{ github.event.pull_request.user.login }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| PR | [#${PR_NUM} — ${PR_TITLE}](${PR_URL}) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Author | @${PR_AUTHOR} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Diff size | ${{ steps.kb_agent.outputs.diff_bytes || '0' }} bytes |" >> "$GITHUB_STEP_SUMMARY"
           echo "| Agent step | ${{ steps.kb_agent.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "| KB changes committed | ${{ steps.detect_changes.outputs.changed || 'false' }} |" >> "$GITHUB_STEP_SUMMARY"
